@@ -1,0 +1,13 @@
+@host = http://localhost:5080
+
+GET {{host}}/health
+
+###
+
+POST {{host}}/api/v1/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Usuário de exemplo",
+  "email": "usuario@exemplo.com"
+}

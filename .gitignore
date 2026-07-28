@@ -1,0 +1,29 @@
+# Build outputs
+bin/
+obj/
+artifacts/
+TestResults/
+coverage/
+coverage.*
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local secrets and environment files
+.env
+.env.*
+appsettings.Local.json
+appsettings.*.Local.json
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Personal notes
+docs/ROTEIRO-PESSOAL-APRESENTACAO.md
