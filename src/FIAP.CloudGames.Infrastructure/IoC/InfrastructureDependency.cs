@@ -12,7 +12,7 @@ namespace FIAP.CloudGames.Infrastructure.IoC;
 /// </summary>
 public static class InfrastructureDependency
 {
-    public const string NomeConnectionString = "PostgreSql";
+    public const string NomeConnectionString = "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=@Testesenha123456";
 
     public static IServiceCollection RegistrarInfrastructureDependency(
         this IServiceCollection servicos,
@@ -21,14 +21,14 @@ public static class InfrastructureDependency
         ArgumentNullException.ThrowIfNull(servicos);
         ArgumentNullException.ThrowIfNull(configuracao);
 
-        var connectionString = configuracao.GetConnectionString(NomeConnectionString)
-            ?? throw new InvalidOperationException(
-                $"ConnectionStrings:{NomeConnectionString} deve ser configurada por User Secrets "
-                + "ou por uma variável de ambiente.");
+        //var connectionString = configuracao.GetConnectionString(NomeConnectionString)
+        //    ?? throw new InvalidOperationException(
+        //        $"ConnectionStrings:{NomeConnectionString} deve ser configurada por User Secrets "
+        //        + "ou por uma variável de ambiente.");
 
         servicos.AddDbContext<PostgresqlDbContext>(opcoes =>
             opcoes.UseNpgsql(
-                connectionString,
+                NomeConnectionString,
                 opcoesPostgreSql =>
                 {
                     opcoesPostgreSql.MigrationsAssembly(

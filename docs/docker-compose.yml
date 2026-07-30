@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: fiap_cloud_games_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '${DB_PASSWORD:-@Testesenha123456}'
+      POSTGRES_DB: fiap_cloud_games
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloud_games_network
+
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: fiap_cloud_games_api
+  #   environment:
+  #     ASPNETCORE_ENVIRONMENT: '${ASPNETCORE_ENVIRONMENT:-Production}'
+  #     ConnectionStrings__PostgreSql: 'Host=postgres;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=${DB_PASSWORD:-@Testesenha123456}'
+  #     Swagger__Enabled: '${SWAGGER_ENABLED:-false}'
+  #   ports:
+  #     - '${API_PORT:-5080}:8080'
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - cloud_games_network
+
+volumes:
+  postgres_data:
+
+networks:
+  cloud_games_network:
+    driver: bridge
