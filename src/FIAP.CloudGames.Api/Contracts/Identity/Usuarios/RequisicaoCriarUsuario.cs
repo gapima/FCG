@@ -8,4 +8,6 @@ public sealed class RequisicaoCriarUsuario
     public string Nome { get; init; } = string.Empty;
 
     public string Email { get; init; } = string.Empty;
+
+    public Guid PerfilId { get; init; }
 }

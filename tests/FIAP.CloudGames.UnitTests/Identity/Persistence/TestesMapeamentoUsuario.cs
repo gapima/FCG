@@ -30,5 +30,8 @@ public sealed class TestesMapeamentoUsuario
         Assert.Equal(
             "criado_em_utc",
             entidade.FindProperty(nameof(Usuario.CriadoEmUtc))!.GetColumnName(tabela));
+        Assert.Equal(
+            "uuid",
+            entidade.FindProperty(nameof(Usuario.PerfilId))!.GetColumnType());
     }
 }

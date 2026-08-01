@@ -13,7 +13,7 @@ public sealed class Usuario
     public DateTimeOffset DataNascimento { get; private set; }
     public string Email { get; private set; }
     public string SenhaHash { get; private set; }
-    public string PerfilId { get; private set; }
+    public Guid PerfilId { get; private set; }
     public bool Ativo { get; private set; }
     public DateTimeOffset CriadoEmUtc { get; private set; }
     public DateTimeOffset? DataInativacao { get; private set; } // Anulável pois nasce ativo
@@ -24,10 +24,9 @@ public sealed class Usuario
         CPF = string.Empty;
         Email = string.Empty;
         SenhaHash = string.Empty;
-        PerfilId = string.Empty;
     }
 
-    public Usuario(Guid id, string nome, string cpf, DateTimeOffset dataNascimento, string email, string senhaHash, string perfilId)
+    public Usuario(Guid id, string nome, string cpf, DateTimeOffset dataNascimento, string email, string senhaHash, Guid perfilId)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("O identificador do usuário não pode ser vazio.");
@@ -44,8 +43,8 @@ public sealed class Usuario
         if (string.IsNullOrWhiteSpace(senhaHash))
             throw new ArgumentException("A senha é obrigatória.");
 
-        if (string.IsNullOrWhiteSpace(perfilId))
-            throw new ArgumentException("O perfil é obrigatório.");
+        if (perfilId == Guid.Empty)
+            throw new ArgumentException("O perfil é obrigatório.", nameof(perfilId));
 
         Id = id;
         Nome = nome;
@@ -59,7 +58,7 @@ public sealed class Usuario
         DataInativacao = null;
     }
 
-    public Usuario(Guid id, string nome, string email, DateTimeOffset criadoEmUtc)
+    public Usuario(Guid id, string nome, string email, Guid perfilId, DateTimeOffset criadoEmUtc)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("O identificador do usuário não pode ser vazio.", nameof(id));
@@ -73,6 +72,9 @@ public sealed class Usuario
         if (email.Length > TamanhoMaximoEmail)
             throw new ArgumentOutOfRangeException(nameof(email));
 
+        if (perfilId == Guid.Empty)
+            throw new ArgumentException("O perfil é obrigatório.", nameof(perfilId));
+
         if (criadoEmUtc.Offset != TimeSpan.Zero)
             throw new ArgumentException("A data de criação deve estar em UTC.", nameof(criadoEmUtc));
 
@@ -81,7 +83,7 @@ public sealed class Usuario
         CPF = string.Empty;
         Email = email;
         SenhaHash = string.Empty;
-        PerfilId = string.Empty;
+        PerfilId = perfilId;
         Ativo = true;
         CriadoEmUtc = criadoEmUtc;
     }

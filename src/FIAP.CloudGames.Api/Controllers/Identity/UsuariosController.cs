@@ -22,7 +22,7 @@ public sealed class UsuariosController : ControllerBase
         CancellationToken tokenCancelamento)
     {
         var resultado = await manipulador.ProcessarAsync(
-            new ComandoCriarUsuario(requisicao.Nome, requisicao.Email),
+            new ComandoCriarUsuario(requisicao.Nome, requisicao.Email, requisicao.PerfilId),
             tokenCancelamento);
 
         if (resultado.Status == StatusCriacaoUsuario.DadosInvalidos)

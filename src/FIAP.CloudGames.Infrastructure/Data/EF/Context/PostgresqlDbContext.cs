@@ -15,6 +15,7 @@ public sealed class PostgresqlDbContext : DbContext
     }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Perfil> Perfis => Set<Perfil>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

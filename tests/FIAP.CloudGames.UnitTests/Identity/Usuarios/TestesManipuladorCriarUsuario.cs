@@ -8,6 +8,7 @@ public sealed class TestesManipuladorCriarUsuario
 {
     private static readonly DateTimeOffset Agora =
         new(2026, 7, 18, 12, 0, 0, TimeSpan.Zero);
+    private static readonly Guid PerfilId = Guid.Parse("4f642cbc-3720-4bb2-b456-15a97049da5c");
 
     [Fact]
     public async Task Processar_ComDadosValidos_NormalizaDadosAntesDePersistir()
@@ -18,7 +19,8 @@ public sealed class TestesManipuladorCriarUsuario
         var resultado = await manipulador.ProcessarAsync(
             new ComandoCriarUsuario(
                 "  Maria   da Silva  ",
-                "  MARIA@EXEMPLO.COM  "),
+                "  MARIA@EXEMPLO.COM  ",
+                PerfilId),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(StatusCriacaoUsuario.Criado, resultado.Status);
@@ -36,12 +38,27 @@ public sealed class TestesManipuladorCriarUsuario
         var manipulador = CriarManipulador(repositorio);
 
         var resultado = await manipulador.ProcessarAsync(
-            new ComandoCriarUsuario("A", "email-invalido"),
+            new ComandoCriarUsuario("A", "email-invalido", PerfilId),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(StatusCriacaoUsuario.DadosInvalidos, resultado.Status);
         Assert.Null(repositorio.UsuarioAdicionado);
         Assert.Equal(2, resultado.Erros.Count);
+    }
+
+    [Fact]
+    public async Task Processar_ComPerfilVazio_NaoPersisteUsuario()
+    {
+        var repositorio = new RepositorioUsuariosStub();
+        var manipulador = CriarManipulador(repositorio);
+
+        var resultado = await manipulador.ProcessarAsync(
+            new ComandoCriarUsuario("Maria da Silva", "maria@exemplo.com", Guid.Empty),
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(StatusCriacaoUsuario.DadosInvalidos, resultado.Status);
+        Assert.Null(repositorio.UsuarioAdicionado);
+        Assert.Contains("perfilId", resultado.Erros);
     }
 
     [Fact]
@@ -53,7 +70,8 @@ public sealed class TestesManipuladorCriarUsuario
         var resultado = await manipulador.ProcessarAsync(
             new ComandoCriarUsuario(
                 "Usuário Existente",
-                "existente@exemplo.com"),
+                "existente@exemplo.com",
+                PerfilId),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(StatusCriacaoUsuario.EmailJaCadastrado, resultado.Status);

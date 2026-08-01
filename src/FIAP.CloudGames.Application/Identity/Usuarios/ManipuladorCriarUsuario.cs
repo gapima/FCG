@@ -37,6 +37,7 @@ public sealed class ManipuladorCriarUsuario
             Guid.NewGuid(),
             nomeNormalizado,
             emailNormalizado!,
+            comando.PerfilId,
             _relogio.GetUtcNow());
 
         var adicionado = await _repositoryUsuarios.TentarAdicionarAsync(
@@ -70,6 +71,11 @@ public sealed class ManipuladorCriarUsuario
         if (emailNormalizado is null)
         {
             erros["email"] = ["Informe um e-mail válido."];
+        }
+
+        if (comando.PerfilId == Guid.Empty)
+        {
+            erros["perfilId"] = ["Informe um perfil válido."];
         }
 
         return erros;

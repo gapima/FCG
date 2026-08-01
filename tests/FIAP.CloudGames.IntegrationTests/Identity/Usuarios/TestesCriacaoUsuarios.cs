@@ -6,6 +6,8 @@ namespace FIAP.CloudGames.IntegrationTests.Identity.Usuarios;
 
 public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
 {
+    private static readonly Guid PerfilId =
+        Guid.Parse("4f642cbc-3720-4bb2-b456-15a97049da5c");
     private readonly FabricaApiCloudGames _fabrica;
 
     public TestesCriacaoUsuarios(FabricaApiCloudGames fabrica)
@@ -24,7 +26,8 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
             new
             {
                 nome = "  Usuário   de Teste  ",
-                email = email.ToUpperInvariant()
+                email = email.ToUpperInvariant(),
+                perfilId = PerfilId
             },
             TestContext.Current.CancellationToken);
 
@@ -47,7 +50,8 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         var requisicao = new
         {
             nome = "Usuário Duplicado",
-            email = $"duplicado-{Guid.NewGuid():N}@exemplo.com"
+            email = $"duplicado-{Guid.NewGuid():N}@exemplo.com",
+            perfilId = PerfilId
         };
 
         var primeiraResposta = await cliente.PostAsJsonAsync(
