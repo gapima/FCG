@@ -9,6 +9,36 @@ namespace FIAP.CloudGames.Api.Controllers.Identity;
 [Tags("Usuários")]
 public sealed class UsuariosController : ControllerBase
 {
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<RespostaUsuario>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RespostaUsuario>> ObterAsync(
+        Guid id,
+        ManipuladorObterUsuario manipulador,
+        CancellationToken tokenCancelamento)
+    {
+        var resultado = await manipulador.ProcessarAsync(
+            new ConsultaObterUsuario(id),
+            tokenCancelamento);
+
+        if (resultado.Status == StatusObtencaoUsuario.IdInvalido)
+            return BadRequest(CriarProblemaValidacao(new Dictionary<string, string[]>
+            {
+                ["id"] = ["Informe um identificador de usuário válido."]
+            }));
+
+        if (resultado.Status == StatusObtencaoUsuario.NaoEncontrado)
+            return NotFound(new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = "Usuário não encontrado.",
+                Detail = "Não existe usuário com o identificador informado."
+            });
+
+        return Ok(CriarResposta(resultado.Usuario!));
+    }
+
     [HttpPost]
     [ProducesResponseType<RespostaUsuario>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]

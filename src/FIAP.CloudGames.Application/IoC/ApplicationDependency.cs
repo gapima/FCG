@@ -17,6 +17,7 @@ public static class ApplicationDependency
         servicos.AddSingleton(TimeProvider.System);
         servicos.AddSingleton<IHashSenha, HashSenhaPbkdf2>();
         servicos.AddScoped<ManipuladorCriarUsuario>();
+        servicos.AddScoped<ManipuladorObterUsuario>();
 
         return servicos;
     }
