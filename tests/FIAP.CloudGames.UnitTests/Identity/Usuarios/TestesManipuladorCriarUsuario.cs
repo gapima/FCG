@@ -1,5 +1,6 @@
 using FIAP.CloudGames.Application.Abstractions.Repositories;
 using FIAP.CloudGames.Application.Identity.Usuarios;
+using FIAP.CloudGames.Application.Abstractions.Security;
 using FIAP.CloudGames.Domain.Identity.Entities;
 
 namespace FIAP.CloudGames.UnitTests.Identity.Usuarios;
@@ -19,7 +20,10 @@ public sealed class TestesManipuladorCriarUsuario
         var resultado = await manipulador.ProcessarAsync(
             new ComandoCriarUsuario(
                 "  Maria   da Silva  ",
+                "123.456.789-00",
+                new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
                 "  MARIA@EXEMPLO.COM  ",
+                "Senha@123",
                 PerfilId),
             TestContext.Current.CancellationToken);
 
@@ -38,12 +42,12 @@ public sealed class TestesManipuladorCriarUsuario
         var manipulador = CriarManipulador(repositorio);
 
         var resultado = await manipulador.ProcessarAsync(
-            new ComandoCriarUsuario("A", "email-invalido", PerfilId),
+            new ComandoCriarUsuario("A", "", Agora.AddDays(1), "email-invalido", "fraca", PerfilId),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(StatusCriacaoUsuario.DadosInvalidos, resultado.Status);
         Assert.Null(repositorio.UsuarioAdicionado);
-        Assert.Equal(2, resultado.Erros.Count);
+        Assert.Equal(5, resultado.Erros.Count);
     }
 
     [Fact]
@@ -53,7 +57,7 @@ public sealed class TestesManipuladorCriarUsuario
         var manipulador = CriarManipulador(repositorio);
 
         var resultado = await manipulador.ProcessarAsync(
-            new ComandoCriarUsuario("Maria da Silva", "maria@exemplo.com", Guid.Empty),
+            new ComandoCriarUsuario("Maria da Silva", "12345678900", Agora.AddYears(-20), "maria@exemplo.com", "Senha@123", Guid.Empty),
             TestContext.Current.CancellationToken);
 
         Assert.Equal(StatusCriacaoUsuario.DadosInvalidos, resultado.Status);
@@ -70,7 +74,10 @@ public sealed class TestesManipuladorCriarUsuario
         var resultado = await manipulador.ProcessarAsync(
             new ComandoCriarUsuario(
                 "Usuário Existente",
+                "12345678900",
+                Agora.AddYears(-20),
                 "existente@exemplo.com",
+                "Senha@123",
                 PerfilId),
             TestContext.Current.CancellationToken);
 
@@ -80,13 +87,19 @@ public sealed class TestesManipuladorCriarUsuario
 
     private static ManipuladorCriarUsuario CriarManipulador(
         RepositorioUsuariosStub repositorio) =>
-        new(repositorio, new RelogioFixo(Agora));
+        new(repositorio, new HashSenhaStub(), new RelogioFixo(Agora));
 
     private sealed class RepositorioUsuariosStub : IRepositoryUsuarios
     {
         public bool DeveAdicionar { get; init; } = true;
 
         public Usuario? UsuarioAdicionado { get; private set; }
+
+        public Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken tokenCancelamento = default) => Task.FromResult<Usuario?>(null);
+        public Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken tokenCancelamento = default) => Task.FromResult<Usuario?>(null);
+        public Task<bool> ExisteEmailAsync(string email, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default) => Task.FromResult(false);
+        public Task<bool> ExisteCpfAsync(string cpf, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default) => Task.FromResult(false);
+        public Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken tokenCancelamento = default) => Task.FromResult(true);
 
         public Task<bool> TentarAdicionarAsync(
             Usuario usuario,
@@ -97,6 +110,13 @@ public sealed class TestesManipuladorCriarUsuario
 
             return Task.FromResult(DeveAdicionar);
         }
+
+        public Task AtualizarAsync(Usuario usuario, CancellationToken tokenCancelamento = default) => Task.CompletedTask;
+    }
+
+    private sealed class HashSenhaStub : IHashSenha
+    {
+        public string Criar(string senha) => $"hash:{senha}";
     }
 
     private sealed class RelogioFixo : TimeProvider

@@ -26,7 +26,10 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
             new
             {
                 nome = "  Usuário   de Teste  ",
+                cpf = $"{Random.Shared.NextInt64(10000000000, 99999999999)}",
+                dataNascimento = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
                 email = email.ToUpperInvariant(),
+                senha = "Senha@123",
                 perfilId = PerfilId
             },
             TestContext.Current.CancellationToken);
@@ -39,7 +42,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         Assert.NotEqual(Guid.Empty, usuario.Id);
         Assert.Equal("Usuário de Teste", usuario.Nome);
         Assert.Equal(email, usuario.Email);
-        Assert.NotEqual(default, usuario.DataCriacao);
+        Assert.NotEqual(default, usuario.CriadoEmUtc);
         Assert.Equal($"/api/v1/usuarios/{usuario.Id}", resposta.Headers.Location?.OriginalString);
     }
 
@@ -50,7 +53,10 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         var requisicao = new
         {
             nome = "Usuário Duplicado",
+            cpf = $"{Random.Shared.NextInt64(10000000000, 99999999999)}",
+            dataNascimento = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
             email = $"duplicado-{Guid.NewGuid():N}@exemplo.com",
+            senha = "Senha@123",
             perfilId = PerfilId
         };
 
@@ -88,5 +94,5 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         Guid Id,
         string Nome,
         string Email,
-        DateTimeOffset DataCriacao);
+        DateTimeOffset CriadoEmUtc);
 }

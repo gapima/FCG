@@ -15,7 +15,10 @@ public sealed class TestesRelacionamentoUsuarioPerfil
         var excecao = Assert.Throws<ArgumentException>(() => new Usuario(
             Guid.NewGuid(),
             "Maria da Silva",
+            "12345678900",
+            DateTimeOffset.UtcNow.AddYears(-20),
             "maria@exemplo.com",
+            "hash-seguro",
             Guid.Empty,
             DateTimeOffset.UtcNow));
 
@@ -28,7 +31,10 @@ public sealed class TestesRelacionamentoUsuarioPerfil
         var usuario = new Usuario(
             Guid.NewGuid(),
             "Maria da Silva",
+            "12345678900",
+            DateTimeOffset.UtcNow.AddYears(-20),
             "maria@exemplo.com",
+            "hash-seguro",
             PerfilId,
             DateTimeOffset.UtcNow);
 

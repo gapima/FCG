@@ -1,4 +1,5 @@
 using FIAP.CloudGames.Application.Identity.Usuarios;
+using FIAP.CloudGames.Application.Abstractions.Security;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FIAP.CloudGames.Application.IoC;
@@ -14,6 +15,7 @@ public static class ApplicationDependency
         ArgumentNullException.ThrowIfNull(servicos);
 
         servicos.AddSingleton(TimeProvider.System);
+        servicos.AddSingleton<IHashSenha, HashSenhaPbkdf2>();
         servicos.AddScoped<ManipuladorCriarUsuario>();
 
         return servicos;

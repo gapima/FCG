@@ -2,15 +2,13 @@ using FIAP.CloudGames.Domain.Identity.Entities;
 
 namespace FIAP.CloudGames.Application.Abstractions.Repositories;
 
-/// <summary>
-/// Define as operações de persistência necessárias pelos casos de uso de usuários.
-/// </summary>
 public interface IRepositoryUsuarios
 {
-    /// <summary>
-    /// Persiste o usuário e retorna false quando o e-mail já estiver cadastrado.
-    /// </summary>
-    Task<bool> TentarAdicionarAsync(
-        Usuario usuario,
-        CancellationToken tokenCancelamento = default);
+    Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken tokenCancelamento = default);
+    Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken tokenCancelamento = default);
+    Task<bool> ExisteEmailAsync(string email, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default);
+    Task<bool> ExisteCpfAsync(string cpf, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default);
+    Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken tokenCancelamento = default);
+    Task<bool> TentarAdicionarAsync(Usuario usuario, CancellationToken tokenCancelamento = default);
+    Task AtualizarAsync(Usuario usuario, CancellationToken tokenCancelamento = default);
 }

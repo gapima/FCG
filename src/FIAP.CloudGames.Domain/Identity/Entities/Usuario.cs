@@ -1,10 +1,9 @@
-using System;
-
 namespace FIAP.CloudGames.Domain.Identity.Entities;
 
 public sealed class Usuario
 {
     public const int TamanhoMaximoNome = 100;
+    public const int TamanhoMaximoCpf = 100;
     public const int TamanhoMaximoEmail = 150;
 
     public Guid Id { get; private set; }
@@ -16,35 +15,33 @@ public sealed class Usuario
     public Guid PerfilId { get; private set; }
     public bool Ativo { get; private set; }
     public DateTimeOffset CriadoEmUtc { get; private set; }
-    public DateTimeOffset? DataInativacao { get; private set; } // Anulável pois nasce ativo
+    public DateTimeOffset? DataInativacao { get; private set; }
 
-    private Usuario() 
+    private Usuario()
     {
-        Nome = string.Empty;
-        CPF = string.Empty;
-        Email = string.Empty;
-        SenhaHash = string.Empty;
+        Nome = null!;
+        CPF = null!;
+        Email = null!;
+        SenhaHash = null!;
     }
 
-    public Usuario(Guid id, string nome, string cpf, DateTimeOffset dataNascimento, string email, string senhaHash, Guid perfilId)
+    public Usuario(
+        Guid id,
+        string nome,
+        string cpf,
+        DateTimeOffset dataNascimento,
+        string email,
+        string senhaHash,
+        Guid perfilId,
+        DateTimeOffset criadoEmUtc)
     {
-        if (id == Guid.Empty)
-            throw new ArgumentException("O identificador do usuário não pode ser vazio.");
+        ValidarIdentificador(id);
+        ValidarDados(nome, dataNascimento, email, perfilId, criadoEmUtc);
+        ArgumentException.ThrowIfNullOrWhiteSpace(cpf);
+        ArgumentException.ThrowIfNullOrWhiteSpace(senhaHash);
 
-        if (string.IsNullOrWhiteSpace(nome))
-            throw new ArgumentException("O nome é obrigatório.");
-
-        if (string.IsNullOrWhiteSpace(cpf))
-            throw new ArgumentException("O CPF é obrigatório.");
-
-        if (string.IsNullOrWhiteSpace(email))
-            throw new ArgumentException("O e-mail é obrigatório.");
-
-        if (string.IsNullOrWhiteSpace(senhaHash))
-            throw new ArgumentException("A senha é obrigatória.");
-
-        if (perfilId == Guid.Empty)
-            throw new ArgumentException("O perfil é obrigatório.", nameof(perfilId));
+        if (cpf.Length > TamanhoMaximoCpf)
+            throw new ArgumentOutOfRangeException(nameof(cpf));
 
         Id = id;
         Nome = nome;
@@ -54,15 +51,36 @@ public sealed class Usuario
         SenhaHash = senhaHash;
         PerfilId = perfilId;
         Ativo = true;
-        CriadoEmUtc = DateTimeOffset.UtcNow;
-        DataInativacao = null;
+        CriadoEmUtc = criadoEmUtc;
     }
 
-    public Usuario(Guid id, string nome, string email, Guid perfilId, DateTimeOffset criadoEmUtc)
+    public void AtualizarDados(
+        string nome,
+        DateTimeOffset dataNascimento,
+        string email,
+        Guid perfilId)
+    {
+        ValidarDados(nome, dataNascimento, email, perfilId, CriadoEmUtc);
+
+        Nome = nome;
+        DataNascimento = dataNascimento;
+        Email = email;
+        PerfilId = perfilId;
+    }
+
+    private static void ValidarIdentificador(Guid id)
     {
         if (id == Guid.Empty)
             throw new ArgumentException("O identificador do usuário não pode ser vazio.", nameof(id));
+    }
 
+    private static void ValidarDados(
+        string nome,
+        DateTimeOffset dataNascimento,
+        string email,
+        Guid perfilId,
+        DateTimeOffset criadoEmUtc)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(nome);
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
 
@@ -75,16 +93,10 @@ public sealed class Usuario
         if (perfilId == Guid.Empty)
             throw new ArgumentException("O perfil é obrigatório.", nameof(perfilId));
 
+        if (dataNascimento.Offset != TimeSpan.Zero)
+            throw new ArgumentException("A data de nascimento deve estar em UTC.", nameof(dataNascimento));
+
         if (criadoEmUtc.Offset != TimeSpan.Zero)
             throw new ArgumentException("A data de criação deve estar em UTC.", nameof(criadoEmUtc));
-
-        Id = id;
-        Nome = nome;
-        CPF = string.Empty;
-        Email = email;
-        SenhaHash = string.Empty;
-        PerfilId = perfilId;
-        Ativo = true;
-        CriadoEmUtc = criadoEmUtc;
     }
 }
