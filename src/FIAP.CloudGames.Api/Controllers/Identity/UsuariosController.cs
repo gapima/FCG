@@ -9,6 +9,54 @@ namespace FIAP.CloudGames.Api.Controllers.Identity;
 [Tags("Usuários")]
 public sealed class UsuariosController : ControllerBase
 {
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<RespostaUsuario>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<RespostaUsuario>> AtualizarAsync(
+        Guid id,
+        RequisicaoAtualizarUsuario requisicao,
+        ManipuladorAtualizarUsuario manipulador,
+        CancellationToken tokenCancelamento)
+    {
+        var resultado = await manipulador.ProcessarAsync(
+            new ComandoAtualizarUsuario(
+                id,
+                requisicao.Nome,
+                requisicao.DataNascimento,
+                requisicao.Email,
+                requisicao.PerfilId),
+            tokenCancelamento);
+
+        if (resultado.Status == StatusAtualizacaoUsuario.DadosInvalidos)
+            return BadRequest(CriarProblemaValidacao(resultado.Erros));
+
+        if (resultado.Status == StatusAtualizacaoUsuario.PerfilNaoEncontrado)
+            return BadRequest(CriarProblemaValidacao(new Dictionary<string, string[]>
+            {
+                ["perfilId"] = ["O perfil informado não existe."]
+            }));
+
+        if (resultado.Status == StatusAtualizacaoUsuario.NaoEncontrado)
+            return NotFound(new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = "Usuário não encontrado.",
+                Detail = "Não existe usuário com o identificador informado."
+            });
+
+        if (resultado.Status == StatusAtualizacaoUsuario.EmailJaCadastrado)
+            return Conflict(new ProblemDetails
+            {
+                Status = StatusCodes.Status409Conflict,
+                Title = "E-mail já cadastrado.",
+                Detail = "Já existe outro usuário cadastrado com o e-mail informado."
+            });
+
+        return Ok(CriarResposta(resultado.Usuario!));
+    }
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType<RespostaUsuario>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
