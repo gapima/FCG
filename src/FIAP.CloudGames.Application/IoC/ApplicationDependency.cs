@@ -1,3 +1,4 @@
+using FIAP.CloudGames.Application.Catalog.Jogos;
 using FIAP.CloudGames.Application.Abstractions.Security;
 using FIAP.CloudGames.Application.Identity.Auth;
 using FIAP.CloudGames.Application.Identity.Usuarios;
@@ -24,6 +25,11 @@ public static class ApplicationDependency
         servicos.AddScoped<ManipuladorLogin>();
         servicos.AddScoped<ManipuladorRenovarToken>();
         servicos.AddScoped<ManipuladorLogout>();
+
+        servicos.AddScoped<ManipuladorCriarJogo>();
+        servicos.AddScoped<ManipuladorObterJogoPorId>();
+        servicos.AddScoped<ManipuladorListarJogos>();
+        servicos.AddScoped<ManipuladorAtualizarJogo>();
 
         return servicos;
     }

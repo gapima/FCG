@@ -1,8 +1,7 @@
 using FIAP.CloudGames.Application.Abstractions.Repositories;
-using FIAP.CloudGames.Application.Abstractions.Security;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
+using FIAP.CloudGames.Infrastructure.Repositories.Catalog;
 using FIAP.CloudGames.Infrastructure.Repositories.Identity;
-using FIAP.CloudGames.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +15,10 @@ public static class InfrastructureDependency
 {
     public const string NomeConnectionString = "PostgreSql";
 
+    // Espelha os valores padrão definidos em docker-compose.yml (POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB/porta).
+    private const string ConexaoPostgreSqlPadrao =
+        "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=@Testesenha123456";
+
     public static IServiceCollection RegistrarInfrastructureDependency(
         this IServiceCollection servicos,
         IConfiguration configuracao)
@@ -24,10 +27,7 @@ public static class InfrastructureDependency
         ArgumentNullException.ThrowIfNull(configuracao);
 
         var connectionString = configuracao.GetConnectionString(NomeConnectionString)
-            ?? throw new InvalidOperationException(
-                $"ConnectionStrings:{NomeConnectionString} deve ser configurada por User Secrets "
-                + "ou por uma variável de ambiente.");
-        var configuracaoJwt = ConfiguracaoJwt.Criar(configuracao);
+            ?? ConexaoPostgreSqlPadrao;
 
         servicos.AddDbContext<PostgresqlDbContext>(opcoes =>
             opcoes.UseNpgsql(
@@ -44,11 +44,7 @@ public static class InfrastructureDependency
                 }));
 
         servicos.AddScoped<IRepositoryUsuarios, RepositorioUsuarios>();
-        servicos.AddScoped<IRepositorioTokens, RepositorioTokens>();
-        servicos.AddSingleton(configuracaoJwt);
-        servicos.AddSingleton<IServicoHashSenha, ServicoHashSenha>();
-        servicos.AddSingleton<IServicoTokenJwt, ServicoTokenJwt>();
-        servicos.AddSingleton<IServicoRefreshToken, ServicoRefreshToken>();
+        servicos.AddScoped<IRepositorioJogos, RepositorioJogos>();
 
         return servicos;
     }

@@ -1,3 +1,4 @@
+using FIAP.CloudGames.Domain.Catalog.Entities;
 using FIAP.CloudGames.Domain.Entities;
 using FIAP.CloudGames.Domain.Identity.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,8 @@ public sealed class PostgresqlDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Perfil> Perfis => Set<Perfil>();
     public DbSet<Token> Tokens => Set<Token>();
+
+    public DbSet<Jogo> Jogos => Set<Jogo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

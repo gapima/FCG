@@ -36,4 +36,21 @@ public sealed class Jogo
         Ativo = true;
         DataCadastro = DateTimeOffset.UtcNow;
     }
+
+    /// <summary>
+    /// Atualiza os dados alteráveis do jogo, preservando as invariantes de domínio.
+    /// </summary>
+    public void AtualizarDados(string titulo, string? descricao, string? faixaEtaria, decimal preco)
+    {
+        if (string.IsNullOrWhiteSpace(titulo))
+            throw new ArgumentException("O título do jogo é obrigatório.");
+
+        if (preco < 0)
+            throw new ArgumentException("O preço do jogo não pode ser negativo.");
+
+        Titulo = titulo;
+        Descricao = descricao;
+        FaixaEtaria = faixaEtaria;
+        Preco = preco;
+    }
 }
