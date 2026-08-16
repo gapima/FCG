@@ -10,9 +10,19 @@ public class Perfil
         Nome = string.Empty;
     }
 
-    public Perfil(string nome)
+    public Perfil(Guid id, string nome)
     {
-        Id = Guid.NewGuid();
+        if (id == Guid.Empty)
+            throw new ArgumentException("O identificador do perfil não pode ser vazio.", nameof(id));
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(nome);
+
+        Id = id;
         Nome = nome;
+    }
+
+    public Perfil(string nome)
+        : this(Guid.NewGuid(), nome)
+    {
     }
 }

@@ -36,7 +36,9 @@ public sealed class FabricaApiCloudGames : WebApplicationFactory<Program>
         builder.ConfigureTestServices(servicos =>
         {
             servicos.RemoveAll<IRepositoryUsuarios>();
+            servicos.RemoveAll<IRepositorioTokens>();
             servicos.AddSingleton<IRepositoryUsuarios, RepositorioUsuariosMemoria>();
+            servicos.AddSingleton<IRepositorioTokens, RepositorioTokensMemoria>();
         });
     }
 }

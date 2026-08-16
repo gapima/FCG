@@ -6,15 +6,86 @@ namespace FIAP.CloudGames.IntegrationTests.Support;
 
 internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
 {
-    private readonly ConcurrentDictionary<string, Usuario> _usuarios =
-        new(StringComparer.Ordinal);
+    internal static readonly Guid PerfilId = PerfisSistema.UsuarioId;
+    private readonly ConcurrentDictionary<Guid, Usuario> _usuarios = new();
 
-    public Task<bool> TentarAdicionarAsync(
-        Usuario usuario,
+    public Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken tokenCancelamento = default)
+    {
+        tokenCancelamento.ThrowIfCancellationRequested();
+        _usuarios.TryGetValue(id, out var usuario);
+        return Task.FromResult(usuario);
+    }
+
+    public Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken tokenCancelamento = default) =>
+        Task.FromResult(_usuarios.Values.SingleOrDefault(usuario => usuario.Email == email));
+
+    public Task<UsuarioAutenticacao?> ObterAutenticacaoPorEmailAsync(
+        string email,
         CancellationToken tokenCancelamento = default)
     {
         tokenCancelamento.ThrowIfCancellationRequested();
+        var usuario = _usuarios.Values.SingleOrDefault(item => item.Email == email);
+        return Task.FromResult(
+            usuario is null
+                ? null
+                : new UsuarioAutenticacao(usuario, PerfisSistema.ObterNome(usuario.PerfilId)));
+    }
 
-        return Task.FromResult(_usuarios.TryAdd(usuario.Email, usuario));
+    public Task<UsuarioAutenticacao?> ObterAutenticacaoPorIdAsync(
+        Guid id,
+        CancellationToken tokenCancelamento = default)
+    {
+        tokenCancelamento.ThrowIfCancellationRequested();
+        _usuarios.TryGetValue(id, out var usuario);
+        return Task.FromResult(
+            usuario is null
+                ? null
+                : new UsuarioAutenticacao(usuario, PerfisSistema.ObterNome(usuario.PerfilId)));
+    }
+
+    public Task<bool> ExisteEmailAsync(string email, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default) =>
+        Task.FromResult(_usuarios.Values.Any(usuario => usuario.Email == email && usuario.Id != ignorarUsuarioId));
+
+    public Task<bool> ExisteCpfAsync(string cpf, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default) =>
+        Task.FromResult(_usuarios.Values.Any(usuario => usuario.CPF == cpf && usuario.Id != ignorarUsuarioId));
+
+    public Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken tokenCancelamento = default) =>
+        Task.FromResult(
+            perfilId == PerfisSistema.UsuarioId
+            || perfilId == PerfisSistema.AdministradorId);
+
+    public Task<bool> TentarAdicionarAsync(Usuario usuario, CancellationToken tokenCancelamento = default)
+    {
+        tokenCancelamento.ThrowIfCancellationRequested();
+        if (_usuarios.Values.Any(existente => existente.Email == usuario.Email))
+            return Task.FromResult(false);
+        return Task.FromResult(_usuarios.TryAdd(usuario.Id, usuario));
+    }
+
+    public Task AtualizarAsync(Usuario usuario, CancellationToken tokenCancelamento = default)
+    {
+        tokenCancelamento.ThrowIfCancellationRequested();
+        _usuarios[usuario.Id] = usuario;
+        return Task.CompletedTask;
+    }
+
+    public bool TentarInativar(string email, DateTimeOffset dataInativacao)
+    {
+        var usuario = _usuarios.Values.SingleOrDefault(item => item.Email == email);
+        if (usuario is null)
+            return false;
+
+        usuario.Inativar(dataInativacao.ToUniversalTime());
+        return true;
+    }
+
+    public bool TentarAlterarPerfil(string email, Guid perfilId)
+    {
+        var usuario = _usuarios.Values.SingleOrDefault(item => item.Email == email);
+        if (usuario is null)
+            return false;
+
+        usuario.AlterarPerfil(perfilId);
+        return true;
     }
 }
