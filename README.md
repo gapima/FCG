@@ -4,7 +4,7 @@ API REST acadêmica em .NET 10 com arquitetura em camadas e persistência prepar
 
 ## Arquitetura
 
-Detalhes sobre a arquitetura do projeto estão descritos em [Architecture.md](Architecture.md#L1).
+Detalhes sobre a arquitetura do projeto estão descritos em [Architecture.md]([Architecture.md#L1](https://github.com/gapima/FCG/blob/fature/proj-documentation/Architure.md)).
 
 ## Executar localmente
 
