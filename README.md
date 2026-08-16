@@ -92,6 +92,8 @@ O Swagger é habilitado apenas em `Development` quando `Swagger:Enabled` for `tr
 ```json
 {
   "nome": "Usuário de exemplo",
+  "cpf": "12345678900",
+  "dataNascimento": "1990-01-01T00:00:00Z",
   "email": "usuario@exemplo.com",
   "senha": "Senha@123"
 }
@@ -103,9 +105,9 @@ Respostas principais:
 |---|---:|
 | Usuário criado | 201 |
 | Dados inválidos | 400 |
-| E-mail já cadastrado | 409 |
+| E-mail ou CPF já cadastrado | 409 |
 
-O nome e o e-mail são normalizados antes da criação da entidade. A senha deve ter pelo menos oito caracteres, letra, número e caractere especial, e somente seu hash é persistido. O e-mail possui índice único no modelo relacional, e tentativas duplicadas resultam em `409 Conflict`.
+O cadastro público sempre cria o perfil `Usuario`. Um `perfilId` adicional enviado no JSON é ignorado e não permite criar um administrador. O nome, o CPF e o e-mail são normalizados antes da criação da entidade. A senha deve ter pelo menos oito caracteres, letra maiúscula, letra minúscula, número e caractere especial, e somente seu hash é persistido.
 
 ## Login
 
@@ -118,7 +120,39 @@ O nome e o e-mail são normalizados antes da criação da entidade. A senha deve
 }
 ```
 
-O login retorna access token JWT de curta duração e refresh token. O access token não é persistido, e somente o hash do refresh token é salvo em `tb_Tokens`. Consulte [o guia completo da implementação](docs/GUIA-IMPLEMENTACAO-LOGIN-JWT-REFRESH-TOKEN.md) e [o guia de execução no Docker](docs/GUIA-DOCKER.md).
+O login retorna access token JWT de curta duração e refresh token. O access token não é persistido, e somente o hash do refresh token é salvo em `tb_Tokens`.
+
+## Autorização, refresh e logout
+
+| Endpoint | Autorização | Regra |
+|---|---|---|
+| `POST /api/v1/usuarios` | Público | Sempre cria o perfil `Usuario` |
+| `GET /api/v1/usuarios/{id}` | Bearer JWT | Próprio usuário ou `Administrador` |
+| `PUT /api/v1/usuarios/{id}` | Bearer JWT | Próprio usuário ou `Administrador`; nunca altera perfil |
+| `POST /api/v1/usuarios/administradores` | `Administrador` | Cria um administrador |
+| `PUT /api/v1/usuarios/{id}/perfil` | `Administrador` | Promove ou altera o perfil de um usuário |
+| `POST /api/v1/auth/refresh` | Refresh token | Rotaciona o refresh token e retorna um novo par |
+| `POST /api/v1/auth/logout` | Bearer JWT | Revoga todos os refresh tokens ativos do usuário |
+
+Para renovar a sessão:
+
+```json
+{
+  "refreshToken": "valor-retornado-pelo-login"
+}
+```
+
+Cada refresh token é de uso único. Após uma renovação, reutilizar o valor anterior resulta em `401 Unauthorized`. O logout revoga os refresh tokens, mas o access token JWT já emitido continua válido até sua expiração curta.
+
+Em um banco novo, o primeiro administrador deve ser provisionado fora da API. Cadastre inicialmente um usuário comum e execute uma única vez, com acesso operacional controlado ao PostgreSQL:
+
+```sql
+UPDATE usuarios
+SET perfil_id = '22222222-2222-2222-2222-222222222222'
+WHERE email = 'admin@exemplo.com';
+```
+
+Depois, faça login novamente para que o novo JWT contenha a role `Administrador`. Os administradores seguintes devem ser criados ou promovidos somente pelos endpoints protegidos.
 
 ## IoC e injeção de dependência
 
@@ -164,6 +198,6 @@ Os testes HTTP substituem os repositórios por implementações em memória. Ass
 - Fora do Compose, nenhuma migration é aplicada automaticamente; no Docker, o serviço `migrations` é responsável por essa etapa.
 - O health check comprova a disponibilidade do processo, não a conexão com o banco.
 - Os módulos possuem organização inicial, mas ainda não têm fronteiras arquiteturais protegidas.
-- O endpoint de renovação do refresh token ainda não está implementado.
-- Policies devem ser aplicadas quando forem criados endpoints protegidos de usuário e administrador.
+- O logout revoga refresh tokens, mas não mantém uma blacklist de access tokens; o JWT atual expira naturalmente.
+- O primeiro administrador exige provisionamento operacional controlado no banco.
 - Antes de produção, devem ser definidos observabilidade, readiness, estratégia de migrations e proteção contra abuso.

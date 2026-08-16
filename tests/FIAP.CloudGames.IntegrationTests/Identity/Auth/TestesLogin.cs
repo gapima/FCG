@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -119,6 +120,85 @@ public sealed class TestesLogin : IClassFixture<FabricaApiCloudGames>
             TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_ComTokenValido_RotacionaTokenEImpedeReutilizacao()
+    {
+        using var cliente = _fabrica.CreateClient();
+        var email = $"refresh-{Guid.NewGuid():N}@exemplo.com";
+        await CadastrarAsync(cliente, email, "Senha@123");
+        var login = await AutenticacaoTeste.LoginAsync(cliente, email);
+
+        var primeiraRenovacao = await cliente.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new { refreshToken = login.RefreshToken },
+            TestContext.Current.CancellationToken);
+        var renovado = await primeiraRenovacao.Content.ReadFromJsonAsync<LoginTeste>(
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, primeiraRenovacao.StatusCode);
+        Assert.NotNull(renovado);
+        Assert.NotEqual(login.RefreshToken, renovado.RefreshToken);
+
+        var reutilizacao = await cliente.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new { refreshToken = login.RefreshToken },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, reutilizacao.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_RevogaRefreshTokensAtivosDoUsuario()
+    {
+        using var cliente = _fabrica.CreateClient();
+        var email = $"logout-{Guid.NewGuid():N}@exemplo.com";
+        await CadastrarAsync(cliente, email, "Senha@123");
+        var login = await AutenticacaoTeste.LoginAsync(cliente, email);
+        cliente.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", login.AccessToken);
+
+        var logout = await cliente.PostAsync(
+            "/api/v1/auth/logout",
+            content: null,
+            TestContext.Current.CancellationToken);
+        var renovacao = await cliente.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new { refreshToken = login.RefreshToken },
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, renovacao.StatusCode);
+    }
+
+    [Fact]
+    public async Task Refresh_SemToken_RetornaDetalhesValidacao()
+    {
+        using var cliente = _fabrica.CreateClient();
+
+        var resposta = await cliente.PostAsJsonAsync(
+            "/api/v1/auth/refresh",
+            new { refreshToken = "" },
+            TestContext.Current.CancellationToken);
+        var conteudo = await resposta.Content.ReadAsStringAsync(
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+        Assert.Contains("refreshToken", conteudo, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Logout_SemAccessToken_RetornaNaoAutorizado()
+    {
+        using var cliente = _fabrica.CreateClient();
+
+        var resposta = await cliente.PostAsync(
+            "/api/v1/auth/logout",
+            content: null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
     }
 
     private static async Task CadastrarAsync(HttpClient cliente, string email, string senha)

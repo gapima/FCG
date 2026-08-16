@@ -6,7 +6,7 @@ namespace FIAP.CloudGames.IntegrationTests.Support;
 
 internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
 {
-    internal static readonly Guid PerfilId = Guid.Parse("4f642cbc-3720-4bb2-b456-15a97049da5c");
+    internal static readonly Guid PerfilId = PerfisSistema.UsuarioId;
     private readonly ConcurrentDictionary<Guid, Usuario> _usuarios = new();
 
     public Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken tokenCancelamento = default)
@@ -28,7 +28,19 @@ internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
         return Task.FromResult(
             usuario is null
                 ? null
-                : new UsuarioAutenticacao(usuario, PerfisSistema.Usuario));
+                : new UsuarioAutenticacao(usuario, PerfisSistema.ObterNome(usuario.PerfilId)));
+    }
+
+    public Task<UsuarioAutenticacao?> ObterAutenticacaoPorIdAsync(
+        Guid id,
+        CancellationToken tokenCancelamento = default)
+    {
+        tokenCancelamento.ThrowIfCancellationRequested();
+        _usuarios.TryGetValue(id, out var usuario);
+        return Task.FromResult(
+            usuario is null
+                ? null
+                : new UsuarioAutenticacao(usuario, PerfisSistema.ObterNome(usuario.PerfilId)));
     }
 
     public Task<bool> ExisteEmailAsync(string email, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default) =>
@@ -38,7 +50,9 @@ internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
         Task.FromResult(_usuarios.Values.Any(usuario => usuario.CPF == cpf && usuario.Id != ignorarUsuarioId));
 
     public Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken tokenCancelamento = default) =>
-        Task.FromResult(perfilId == PerfilId);
+        Task.FromResult(
+            perfilId == PerfisSistema.UsuarioId
+            || perfilId == PerfisSistema.AdministradorId);
 
     public Task<bool> TentarAdicionarAsync(Usuario usuario, CancellationToken tokenCancelamento = default)
     {
@@ -62,6 +76,16 @@ internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
             return false;
 
         usuario.Inativar(dataInativacao.ToUniversalTime());
+        return true;
+    }
+
+    public bool TentarAlterarPerfil(string email, Guid perfilId)
+    {
+        var usuario = _usuarios.Values.SingleOrDefault(item => item.Email == email);
+        if (usuario is null)
+            return false;
+
+        usuario.AlterarPerfil(perfilId);
         return true;
     }
 }

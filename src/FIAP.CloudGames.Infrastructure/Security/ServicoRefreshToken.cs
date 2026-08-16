@@ -20,7 +20,7 @@ internal sealed class ServicoRefreshToken : IServicoRefreshToken
     {
         var bytes = RandomNumberGenerator.GetBytes(QuantidadeBytes);
         var valor = ConverterBase64Url(bytes);
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(valor)));
+        var hash = CalcularHash(valor);
         var criadoEm = _relogio.GetUtcNow();
 
         return new RefreshTokenGerado(
@@ -28,6 +28,12 @@ internal sealed class ServicoRefreshToken : IServicoRefreshToken
             hash,
             criadoEm,
             criadoEm.AddDays(_configuracao.RefreshTokenExpirationDays));
+    }
+
+    public string CalcularHash(string token)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(token);
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
     }
 
     private static string ConverterBase64Url(byte[] bytes) =>

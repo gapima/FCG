@@ -35,13 +35,10 @@ public sealed class ManipuladorAtualizarUsuario
         if (usuario is null)
             return ResultadoAtualizarUsuario.NaoEncontrado();
 
-        if (!await _repositorioUsuarios.PerfilExisteAsync(comando.PerfilId, tokenCancelamento))
-            return ResultadoAtualizarUsuario.PerfilNaoEncontrado();
-
         if (await _repositorioUsuarios.ExisteEmailAsync(email!, comando.Id, tokenCancelamento))
             return ResultadoAtualizarUsuario.ConflitoEmail();
 
-        usuario.AtualizarDados(nome, dataNascimento, email!, comando.PerfilId);
+        usuario.AtualizarDados(nome, dataNascimento, email!);
         await _repositorioUsuarios.AtualizarAsync(usuario, tokenCancelamento);
 
         return ResultadoAtualizarUsuario.Atualizado(DadosUsuario.De(usuario));
@@ -64,9 +61,6 @@ public sealed class ManipuladorAtualizarUsuario
             erros["email"] = ["Informe um e-mail válido."];
         if (comando.DataNascimento == default || dataNascimento > agora)
             erros["dataNascimento"] = ["Informe uma data de nascimento válida e não futura."];
-        if (comando.PerfilId == Guid.Empty)
-            erros["perfilId"] = ["Informe um perfil válido."];
-
         return erros;
     }
 }

@@ -10,6 +10,12 @@ public interface IRepositorioTokens
         string tokenHash,
         CancellationToken tokenCancelamento = default);
 
+    Task<bool> TentarRotacionarAsync(
+        string tokenHashAtual,
+        Token novoToken,
+        DateTimeOffset dataRevogacao,
+        CancellationToken tokenCancelamento = default);
+
     Task RevogarTokensAtivosDoUsuarioAsync(
         Guid usuarioId,
         DateTimeOffset dataRevogacao,

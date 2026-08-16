@@ -9,6 +9,9 @@ public interface IRepositoryUsuarios
     Task<UsuarioAutenticacao?> ObterAutenticacaoPorEmailAsync(
         string email,
         CancellationToken tokenCancelamento = default);
+    Task<UsuarioAutenticacao?> ObterAutenticacaoPorIdAsync(
+        Guid id,
+        CancellationToken tokenCancelamento = default);
     Task<bool> ExisteEmailAsync(string email, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default);
     Task<bool> ExisteCpfAsync(string cpf, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default);
     Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken tokenCancelamento = default);

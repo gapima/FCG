@@ -5,7 +5,6 @@ public enum StatusAtualizacaoUsuario
     Atualizado,
     DadosInvalidos,
     NaoEncontrado,
-    PerfilNaoEncontrado,
     EmailJaCadastrado
 }
 
@@ -33,9 +32,6 @@ public sealed class ResultadoAtualizarUsuario
 
     public static ResultadoAtualizarUsuario NaoEncontrado() =>
         new(StatusAtualizacaoUsuario.NaoEncontrado, null, null);
-
-    public static ResultadoAtualizarUsuario PerfilNaoEncontrado() =>
-        new(StatusAtualizacaoUsuario.PerfilNaoEncontrado, null, null);
 
     public static ResultadoAtualizarUsuario ConflitoEmail() =>
         new(StatusAtualizacaoUsuario.EmailJaCadastrado, null, null);

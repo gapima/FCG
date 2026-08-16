@@ -57,14 +57,20 @@ public sealed class Usuario
     public void AtualizarDados(
         string nome,
         DateTimeOffset dataNascimento,
-        string email,
-        Guid perfilId)
+        string email)
     {
-        ValidarDados(nome, dataNascimento, email, perfilId, CriadoEmUtc);
+        ValidarDados(nome, dataNascimento, email, PerfilId, CriadoEmUtc);
 
         Nome = nome;
         DataNascimento = dataNascimento;
         Email = email;
+    }
+
+    public void AlterarPerfil(Guid perfilId)
+    {
+        if (perfilId == Guid.Empty)
+            throw new ArgumentException("O perfil é obrigatório.", nameof(perfilId));
+
         PerfilId = perfilId;
     }
 

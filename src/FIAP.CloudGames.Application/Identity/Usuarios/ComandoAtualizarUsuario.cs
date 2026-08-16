@@ -4,5 +4,4 @@ public sealed record ComandoAtualizarUsuario(
     Guid Id,
     string Nome,
     DateTimeOffset DataNascimento,
-    string Email,
-    Guid PerfilId);
+    string Email);

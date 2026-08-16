@@ -255,6 +255,11 @@ public sealed class TestesManipuladorLogin
                     : new UsuarioAutenticacao(_usuario, PerfisSistema.Usuario));
         }
 
+        public Task<UsuarioAutenticacao?> ObterAutenticacaoPorIdAsync(
+            Guid id,
+            CancellationToken tokenCancelamento = default) =>
+            Task.FromResult<UsuarioAutenticacao?>(null);
+
         public Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken tokenCancelamento = default) =>
             Task.FromResult<Usuario?>(null);
 
@@ -297,6 +302,13 @@ public sealed class TestesManipuladorLogin
             string tokenHash,
             CancellationToken tokenCancelamento = default) =>
             Task.FromResult<Token?>(null);
+
+        public Task<bool> TentarRotacionarAsync(
+            string tokenHashAtual,
+            Token novoToken,
+            DateTimeOffset dataRevogacao,
+            CancellationToken tokenCancelamento = default) =>
+            Task.FromResult(false);
 
         public Task RevogarTokensAtivosDoUsuarioAsync(
             Guid usuarioId,
@@ -342,5 +354,7 @@ public sealed class TestesManipuladorLogin
                 Agora,
                 Agora.AddDays(7));
         }
+
+        public string CalcularHash(string token) => $"hash::{token}";
     }
 }

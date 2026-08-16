@@ -15,6 +15,7 @@ public sealed class TestesManipuladorAtualizarUsuario
         var usuario = CriarUsuario();
         var cpf = usuario.CPF;
         var senhaHash = usuario.SenhaHash;
+        var perfilId = usuario.PerfilId;
         var repositorio = new RepositorioStub(usuario);
 
         var resultado = await CriarManipulador(repositorio).ProcessarAsync(CriarComando(usuario.Id), TestContext.Current.CancellationToken);
@@ -25,6 +26,7 @@ public sealed class TestesManipuladorAtualizarUsuario
         Assert.Equal("novo@exemplo.com", usuario.Email);
         Assert.Equal(cpf, usuario.CPF);
         Assert.Equal(senhaHash, usuario.SenhaHash);
+        Assert.Equal(perfilId, usuario.PerfilId);
         Assert.Equal(usuario.Id, repositorio.IdIgnoradoNaConsultaEmail);
     }
 
@@ -50,18 +52,6 @@ public sealed class TestesManipuladorAtualizarUsuario
     }
 
     [Fact]
-    public async Task Processar_ComPerfilInexistente_RetornaErroSemAlterarEstado()
-    {
-        var usuario = CriarUsuario();
-        var repositorio = new RepositorioStub(usuario) { PerfilExiste = false };
-        var resultado = await CriarManipulador(repositorio).ProcessarAsync(CriarComando(usuario.Id), TestContext.Current.CancellationToken);
-
-        Assert.Equal(StatusAtualizacaoUsuario.PerfilNaoEncontrado, resultado.Status);
-        Assert.Equal("Nome Original", usuario.Nome);
-        Assert.False(repositorio.Atualizado);
-    }
-
-    [Fact]
     public async Task Processar_ComDadosInvalidos_NaoConsultaNemAlteraUsuario()
     {
         var usuario = CriarUsuario();
@@ -80,7 +70,7 @@ public sealed class TestesManipuladorAtualizarUsuario
         "original@exemplo.com", "hash-original", PerfilId, Agora.AddDays(-1));
 
     private static ComandoAtualizarUsuario CriarComando(Guid id) => new(
-        id, "  Novo   Nome ", Agora.AddYears(-18), " NOVO@EXEMPLO.COM ", PerfilId);
+        id, "  Novo   Nome ", Agora.AddYears(-18), " NOVO@EXEMPLO.COM ");
 
     private static ManipuladorAtualizarUsuario CriarManipulador(RepositorioStub repositorio) =>
         new(repositorio, new RelogioFixo(Agora));
@@ -95,6 +85,7 @@ public sealed class TestesManipuladorAtualizarUsuario
         public Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken token = default) { Consultado = true; return Task.FromResult(usuario); }
         public Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken token = default) => Task.FromResult<Usuario?>(null);
         public Task<UsuarioAutenticacao?> ObterAutenticacaoPorEmailAsync(string email, CancellationToken token = default) => Task.FromResult<UsuarioAutenticacao?>(null);
+        public Task<UsuarioAutenticacao?> ObterAutenticacaoPorIdAsync(Guid id, CancellationToken token = default) => Task.FromResult<UsuarioAutenticacao?>(null);
         public Task<bool> ExisteEmailAsync(string email, Guid? ignorarId, CancellationToken token = default) { IdIgnoradoNaConsultaEmail = ignorarId; return Task.FromResult(EmailExiste); }
         public Task<bool> ExisteCpfAsync(string cpf, Guid? ignorarId, CancellationToken token = default) => Task.FromResult(false);
         public Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken token = default) => Task.FromResult(PerfilExiste);

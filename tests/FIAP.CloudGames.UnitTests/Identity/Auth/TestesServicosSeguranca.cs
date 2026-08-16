@@ -91,6 +91,7 @@ public sealed class TestesServicosSeguranca
             primeiro.Valor,
             caractere => Assert.True(char.IsLetterOrDigit(caractere) || caractere is '-' or '_'));
         Assert.Equal(hashCalculado, primeiro.Hash);
+        Assert.Equal(hashCalculado, servico.CalcularHash(primeiro.Valor));
         Assert.NotEqual(primeiro.Valor, primeiro.Hash);
         Assert.Equal(Agora.AddDays(7), primeiro.ExpiraEm);
     }

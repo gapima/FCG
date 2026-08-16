@@ -29,6 +29,48 @@ internal sealed class RepositorioTokens : IRepositorioTokens
             .AsNoTracking()
             .SingleOrDefaultAsync(token => token.TokenHash == tokenHash, tokenCancelamento);
 
+    public async Task<bool> TentarRotacionarAsync(
+        string tokenHashAtual,
+        Token novoToken,
+        DateTimeOffset dataRevogacao,
+        CancellationToken tokenCancelamento = default)
+    {
+        var estrategia = _contexto.Database.CreateExecutionStrategy();
+        return await estrategia.ExecuteAsync(async () =>
+        {
+            await using var transacao = await _contexto.Database.BeginTransactionAsync(tokenCancelamento);
+
+            var quantidadeAtualizada = await _contexto.Tokens
+                .Where(token => token.TokenHash == tokenHashAtual
+                    && token.DataRevogacao == null
+                    && token.DataExpiracao > dataRevogacao)
+                .ExecuteUpdateAsync(
+                    atualizacao => atualizacao.SetProperty(
+                        token => token.DataRevogacao,
+                        dataRevogacao),
+                    tokenCancelamento);
+
+            if (quantidadeAtualizada != 1)
+            {
+                await transacao.RollbackAsync(tokenCancelamento);
+                return false;
+            }
+
+            try
+            {
+                _contexto.Tokens.Add(novoToken);
+                await _contexto.SaveChangesAsync(tokenCancelamento);
+                await transacao.CommitAsync(tokenCancelamento);
+                return true;
+            }
+            catch
+            {
+                _contexto.Entry(novoToken).State = EntityState.Detached;
+                throw;
+            }
+        });
+    }
+
     public async Task RevogarTokensAtivosDoUsuarioAsync(
         Guid usuarioId,
         DateTimeOffset dataRevogacao,

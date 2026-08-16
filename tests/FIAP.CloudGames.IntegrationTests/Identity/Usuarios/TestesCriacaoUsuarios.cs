@@ -1,13 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using FIAP.CloudGames.Domain.Identity.Entities;
 using FIAP.CloudGames.IntegrationTests.Support;
 
 namespace FIAP.CloudGames.IntegrationTests.Identity.Usuarios;
 
 public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
 {
-    private static readonly Guid PerfilId =
-        Guid.Parse("4f642cbc-3720-4bb2-b456-15a97049da5c");
     private readonly FabricaApiCloudGames _fabrica;
 
     public TestesCriacaoUsuarios(FabricaApiCloudGames fabrica)
@@ -30,7 +29,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
                 dataNascimento = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
                 email = email.ToUpperInvariant(),
                 senha = "Senha@123",
-                perfilId = PerfilId
+                perfilId = PerfisSistema.AdministradorId
             },
             TestContext.Current.CancellationToken);
 
@@ -42,6 +41,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         Assert.NotEqual(Guid.Empty, usuario.Id);
         Assert.Equal("Usuário de Teste", usuario.Nome);
         Assert.Equal(email, usuario.Email);
+        Assert.Equal(PerfisSistema.UsuarioId, usuario.PerfilId);
         Assert.NotEqual(default, usuario.CriadoEmUtc);
         Assert.Equal($"/api/v1/usuarios/{usuario.Id}", resposta.Headers.Location?.OriginalString);
     }
@@ -57,7 +57,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
             dataNascimento = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
             email = $"duplicado-{Guid.NewGuid():N}@exemplo.com",
             senha = "Senha@123",
-            perfilId = PerfilId
+            perfilId = PerfisSistema.AdministradorId
         };
 
         var primeiraResposta = await cliente.PostAsJsonAsync(
@@ -94,5 +94,6 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         Guid Id,
         string Nome,
         string Email,
+        Guid PerfilId,
         DateTimeOffset CriadoEmUtc);
 }

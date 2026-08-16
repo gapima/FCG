@@ -3,6 +3,8 @@ namespace FIAP.CloudGames.Application.Abstractions.Security;
 public interface IServicoRefreshToken
 {
     RefreshTokenGerado GerarToken();
+
+    string CalcularHash(string token);
 }
 
 public sealed record RefreshTokenGerado(

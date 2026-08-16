@@ -7,5 +7,4 @@ public sealed class RequisicaoCriarUsuario
     public DateTimeOffset DataNascimento { get; init; }
     public string Email { get; init; } = string.Empty;
     public string Senha { get; init; } = string.Empty;
-    public Guid PerfilId { get; init; }
 }

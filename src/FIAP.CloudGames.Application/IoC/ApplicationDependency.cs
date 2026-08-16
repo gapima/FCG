@@ -20,7 +20,10 @@ public static class ApplicationDependency
         servicos.AddScoped<ManipuladorCriarUsuario>();
         servicos.AddScoped<ManipuladorObterUsuario>();
         servicos.AddScoped<ManipuladorAtualizarUsuario>();
+        servicos.AddScoped<ManipuladorAlterarPerfilUsuario>();
         servicos.AddScoped<ManipuladorLogin>();
+        servicos.AddScoped<ManipuladorRenovarToken>();
+        servicos.AddScoped<ManipuladorLogout>();
 
         return servicos;
     }

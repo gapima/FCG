@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using FIAP.CloudGames.Api.Contracts.Identity.Auth;
 using FIAP.CloudGames.Application.Identity.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -43,8 +44,69 @@ public sealed class AuthController : ControllerBase
             });
         }
 
-        var login = resultado.Login!;
-        return Ok(new RespostaLogin(
+        return Ok(CriarResposta(resultado.Login!));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    [ProducesResponseType<RespostaLogin>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<RespostaLogin>> RenovarAsync(
+        RequisicaoRefreshToken requisicao,
+        ManipuladorRenovarToken manipulador,
+        CancellationToken tokenCancelamento)
+    {
+        var resultado = await manipulador.ProcessarAsync(
+            new ComandoRenovarToken(requisicao.RefreshToken),
+            tokenCancelamento);
+
+        if (resultado.Status == StatusRenovacaoToken.DadosInvalidos)
+        {
+            return BadRequest(new ValidationProblemDetails(resultado.Erros.ToDictionary())
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Um ou mais dados informados são inválidos."
+            });
+        }
+
+        if (resultado.Status == StatusRenovacaoToken.TokenInvalido)
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Refresh token inválido.",
+                Detail = "O refresh token é inválido, expirou ou já foi utilizado."
+            });
+        }
+
+        return Ok(CriarResposta(resultado.Login!));
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> LogoutAsync(
+        ManipuladorLogout manipulador,
+        CancellationToken tokenCancelamento)
+    {
+        if (!Guid.TryParse(User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value, out var usuarioId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Token de acesso inválido.",
+                Detail = "O token não identifica um usuário."
+            });
+        }
+
+        await manipulador.ProcessarAsync(usuarioId, tokenCancelamento);
+        return NoContent();
+    }
+
+    private static RespostaLogin CriarResposta(LoginRealizado login) =>
+        new(
             login.AccessToken,
             login.RefreshToken,
             login.TokenType,
@@ -55,6 +117,5 @@ public sealed class AuthController : ControllerBase
                 login.Usuario.Nome,
                 login.Usuario.Email,
                 login.Usuario.PerfilId,
-                login.Usuario.Perfil)));
-    }
+                login.Usuario.Perfil));
 }
