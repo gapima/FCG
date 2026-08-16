@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using FIAP.CloudGames.Domain.Identity.Entities;
 using FIAP.CloudGames.IntegrationTests.Support;
 
 namespace FIAP.CloudGames.IntegrationTests.Identity.Usuarios;
@@ -25,11 +24,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
             new
             {
                 nome = "  Usuário   de Teste  ",
-                cpf = $"{Random.Shared.NextInt64(10000000000, 99999999999)}",
-                dataNascimento = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
-                email = email.ToUpperInvariant(),
-                senha = "Senha@123",
-                perfilId = PerfisSistema.AdministradorId
+                email = email.ToUpperInvariant()
             },
             TestContext.Current.CancellationToken);
 
@@ -41,8 +36,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         Assert.NotEqual(Guid.Empty, usuario.Id);
         Assert.Equal("Usuário de Teste", usuario.Nome);
         Assert.Equal(email, usuario.Email);
-        Assert.Equal(PerfisSistema.UsuarioId, usuario.PerfilId);
-        Assert.NotEqual(default, usuario.CriadoEmUtc);
+        Assert.NotEqual(default, usuario.DataCriacao);
         Assert.Equal($"/api/v1/usuarios/{usuario.Id}", resposta.Headers.Location?.OriginalString);
     }
 
@@ -53,11 +47,7 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         var requisicao = new
         {
             nome = "Usuário Duplicado",
-            cpf = $"{Random.Shared.NextInt64(10000000000, 99999999999)}",
-            dataNascimento = new DateTimeOffset(1990, 1, 1, 0, 0, 0, TimeSpan.Zero),
-            email = $"duplicado-{Guid.NewGuid():N}@exemplo.com",
-            senha = "Senha@123",
-            perfilId = PerfisSistema.AdministradorId
+            email = $"duplicado-{Guid.NewGuid():N}@exemplo.com"
         };
 
         var primeiraResposta = await cliente.PostAsJsonAsync(
@@ -94,6 +84,5 @@ public sealed class TestesCriacaoUsuarios : IClassFixture<FabricaApiCloudGames>
         Guid Id,
         string Nome,
         string Email,
-        Guid PerfilId,
-        DateTimeOffset CriadoEmUtc);
+        DateTimeOffset DataCriacao);
 }

@@ -1,119 +1,98 @@
 using System.Net.Mail;
 using FIAP.CloudGames.Application.Abstractions.Repositories;
-using FIAP.CloudGames.Application.Abstractions.Security;
 using FIAP.CloudGames.Domain.Identity.Entities;
 
 namespace FIAP.CloudGames.Application.Identity.Usuarios;
 
+/// <summary>
+/// Valida, normaliza e persiste um novo usuário.
+/// </summary>
 public sealed class ManipuladorCriarUsuario
 {
     private const int TamanhoMinimoNome = 3;
-    private const int TamanhoMinimoSenha = 8;
-    private readonly IRepositoryUsuarios _repositorioUsuarios;
-    private readonly IHashSenha _hashSenha;
+    private readonly IRepositoryUsuarios _repositoryUsuarios;
     private readonly TimeProvider _relogio;
 
-    public ManipuladorCriarUsuario(
-        IRepositoryUsuarios repositorioUsuarios,
-        IHashSenha hashSenha,
-        TimeProvider relogio)
+    public ManipuladorCriarUsuario(IRepositoryUsuarios repositoryUsuarios, TimeProvider relogio)
     {
-        _repositorioUsuarios = repositorioUsuarios;
-        _hashSenha = hashSenha;
+        _repositoryUsuarios = repositoryUsuarios;
         _relogio = relogio;
     }
 
-    public async Task<ResultadoCriarUsuario> ProcessarAsync(
-        ComandoCriarUsuario comando,
-        CancellationToken tokenCancelamento = default)
+    public async Task<ResultadoCriarUsuario> ProcessarAsync(ComandoCriarUsuario comando,
+                                                            CancellationToken tokenCancelamento = default)
     {
         ArgumentNullException.ThrowIfNull(comando);
 
-        var nome = NormalizarNome(comando.Nome);
-        var cpf = NormalizarCpf(comando.CPF);
-        var email = NormalizarEmail(comando.Email);
-        var dataNascimento = comando.DataNascimento.ToUniversalTime();
-        var erros = Validar(comando, nome, cpf, email, dataNascimento, _relogio.GetUtcNow());
+        var nomeNormalizado = NormalizarNome(comando.Nome);
+        var emailNormalizado = NormalizarEmail(comando.Email);
+        var erros = Validar(comando, nomeNormalizado, emailNormalizado);
 
         if (erros.Count > 0)
+        {
             return ResultadoCriarUsuario.DadosInvalidos(erros);
-
-        if (!await _repositorioUsuarios.PerfilExisteAsync(comando.PerfilId, tokenCancelamento))
-            return ResultadoCriarUsuario.PerfilNaoEncontrado();
-
-        if (await _repositorioUsuarios.ExisteEmailAsync(email!, null, tokenCancelamento))
-            return ResultadoCriarUsuario.ConflitoEmail();
-
-        if (await _repositorioUsuarios.ExisteCpfAsync(cpf, null, tokenCancelamento))
-            return ResultadoCriarUsuario.ConflitoCpf();
+        }
 
         var usuario = new Usuario(
             Guid.NewGuid(),
-            nome,
-            cpf,
-            dataNascimento,
-            email!,
-            _hashSenha.Criar(comando.Senha),
-            comando.PerfilId,
+            nomeNormalizado,
+            emailNormalizado!,
             _relogio.GetUtcNow());
 
-        var adicionado = await _repositorioUsuarios.TentarAdicionarAsync(usuario, tokenCancelamento);
+        var adicionado = await _repositoryUsuarios.TentarAdicionarAsync(
+            usuario,
+            tokenCancelamento);
 
         return adicionado
-            ? ResultadoCriarUsuario.Criado(DadosUsuario.De(usuario))
-            : ResultadoCriarUsuario.ConflitoEmail();
-    }
-
-    internal static string NormalizarNome(string? nome) =>
-        string.Join(' ', (nome ?? string.Empty).Split(
-            ' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-
-    internal static string NormalizarCpf(string? cpf) =>
-        new((cpf ?? string.Empty).Where(char.IsDigit).ToArray());
-
-    internal static string? NormalizarEmail(string? email)
-    {
-        var valor = email?.Trim();
-        if (string.IsNullOrWhiteSpace(valor)
-            || valor.Length > Usuario.TamanhoMaximoEmail
-            || !MailAddress.TryCreate(valor, out var endereco)
-            || !string.Equals(endereco.Address, valor, StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        return endereco.Address.ToLowerInvariant();
+            ? ResultadoCriarUsuario.Criado(new UsuarioCriado(
+                usuario.Id,
+                usuario.Nome,
+                usuario.Email,
+                usuario.CriadoEmUtc))
+            : ResultadoCriarUsuario.EmailJaCadastrado();
     }
 
     private static Dictionary<string, string[]> Validar(
         ComandoCriarUsuario comando,
-        string nome,
-        string cpf,
-        string? email,
-        DateTimeOffset dataNascimento,
-        DateTimeOffset agora)
+        string nomeNormalizado,
+        string? emailNormalizado)
     {
         var erros = new Dictionary<string, string[]>(StringComparer.Ordinal);
 
-        if (nome.Length is < TamanhoMinimoNome or > Usuario.TamanhoMaximoNome)
-            erros["nome"] = [$"O nome deve conter entre {TamanhoMinimoNome} e {Usuario.TamanhoMaximoNome} caracteres."];
-        if (string.IsNullOrWhiteSpace(cpf))
-            erros["cpf"] = ["O CPF é obrigatório."];
-        if (email is null)
+        if (nomeNormalizado.Length is < TamanhoMinimoNome or > Usuario.TamanhoMaximoNome)
+        {
+            erros["nome"] =
+            [
+                $"O nome deve conter entre {TamanhoMinimoNome} e {Usuario.TamanhoMaximoNome} caracteres."
+            ];
+        }
+
+        if (emailNormalizado is null)
+        {
             erros["email"] = ["Informe um e-mail válido."];
-        if (comando.DataNascimento == default || dataNascimento > agora)
-            erros["dataNascimento"] = ["Informe uma data de nascimento válida e não futura."];
-        if (!SenhaValida(comando.Senha))
-            erros["senha"] = ["A senha deve ter ao menos 8 caracteres, com maiúscula, minúscula, número e caractere especial."];
-        if (comando.PerfilId == Guid.Empty)
-            erros["perfilId"] = ["Informe um perfil válido."];
+        }
 
         return erros;
     }
 
-    private static bool SenhaValida(string? senha) =>
-        !string.IsNullOrWhiteSpace(senha)
-        && senha.Length >= TamanhoMinimoSenha
-        && senha.Any(char.IsUpper)
-        && senha.Any(char.IsLower)
-        && senha.Any(char.IsDigit)
-        && senha.Any(caractere => !char.IsLetterOrDigit(caractere));
+    private static string NormalizarNome(string? nome) =>
+        string.Join(' ',
+            (nome ?? string.Empty).Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+    private static string? NormalizarEmail(string? email)
+    {
+        var valor = email?.Trim();
+
+        if (string.IsNullOrWhiteSpace(valor)
+            || valor.Length > Usuario.TamanhoMaximoEmail
+            || !MailAddress.TryCreate(valor, out var endereco)
+            || !string.Equals(endereco.Address, valor, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return endereco.Address.ToLowerInvariant();
+    }
 }

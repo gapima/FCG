@@ -16,61 +16,21 @@ internal sealed class RepositorioUsuarios : IRepositoryUsuarios
         _contexto = contexto;
     }
 
-    public Task<Usuario?> ObterPorIdAsync(Guid id, CancellationToken tokenCancelamento = default) =>
-        _contexto.Usuarios.AsNoTracking().SingleOrDefaultAsync(
-            usuario => usuario.Id == id,
-            tokenCancelamento);
-
-    public Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken tokenCancelamento = default) =>
-        _contexto.Usuarios.AsNoTracking().SingleOrDefaultAsync(
-            usuario => usuario.Email == email,
-            tokenCancelamento);
-
-    public Task<UsuarioAutenticacao?> ObterAutenticacaoPorEmailAsync(
-        string email,
-        CancellationToken tokenCancelamento = default) =>
-        (from usuario in _contexto.Usuarios.AsNoTracking()
-         join perfil in _contexto.Perfis.AsNoTracking()
-             on usuario.PerfilId equals perfil.Id
-         where usuario.Email == email
-         select new UsuarioAutenticacao(usuario, perfil.Nome))
-        .SingleOrDefaultAsync(tokenCancelamento);
-
-    public Task<UsuarioAutenticacao?> ObterAutenticacaoPorIdAsync(
-        Guid id,
-        CancellationToken tokenCancelamento = default) =>
-        (from usuario in _contexto.Usuarios.AsNoTracking()
-         join perfil in _contexto.Perfis.AsNoTracking()
-             on usuario.PerfilId equals perfil.Id
-         where usuario.Id == id
-         select new UsuarioAutenticacao(usuario, perfil.Nome))
-        .SingleOrDefaultAsync(tokenCancelamento);
-
-    public Task<bool> ExisteEmailAsync(
-        string email,
-        Guid? ignorarUsuarioId,
-        CancellationToken tokenCancelamento = default) =>
-        _contexto.Usuarios.AsNoTracking().AnyAsync(
-            usuario => usuario.Email == email
-                && (!ignorarUsuarioId.HasValue || usuario.Id != ignorarUsuarioId.Value),
-            tokenCancelamento);
-
-    public Task<bool> ExisteCpfAsync(
-        string cpf,
-        Guid? ignorarUsuarioId,
-        CancellationToken tokenCancelamento = default) =>
-        _contexto.Usuarios.AsNoTracking().AnyAsync(
-            usuario => usuario.CPF == cpf
-                && (!ignorarUsuarioId.HasValue || usuario.Id != ignorarUsuarioId.Value),
-            tokenCancelamento);
-
-    public Task<bool> PerfilExisteAsync(Guid perfilId, CancellationToken tokenCancelamento = default) =>
-        _contexto.Perfis.AsNoTracking().AnyAsync(perfil => perfil.Id == perfilId, tokenCancelamento);
-
     public async Task<bool> TentarAdicionarAsync(
         Usuario usuario,
         CancellationToken tokenCancelamento = default)
     {
+        var emailJaCadastrado = await _contexto.Usuarios
+            .AsNoTracking()
+            .AnyAsync(
+                usuarioExistente => usuarioExistente.Email == usuario.Email,
+                tokenCancelamento);
+
+        if (emailJaCadastrado)
+        {
+            return false;
+        }
+
         _contexto.Usuarios.Add(usuario);
 
         try
@@ -83,12 +43,6 @@ internal sealed class RepositorioUsuarios : IRepositoryUsuarios
             _contexto.Entry(usuario).State = EntityState.Detached;
             return false;
         }
-    }
-
-    public async Task AtualizarAsync(Usuario usuario, CancellationToken tokenCancelamento = default)
-    {
-        _contexto.Usuarios.Update(usuario);
-        await _contexto.SaveChangesAsync(tokenCancelamento);
     }
 
     private static bool EhViolacaoEmailUnico(DbUpdateException excecao) =>

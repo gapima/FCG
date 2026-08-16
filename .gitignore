@@ -18,7 +18,6 @@ coverage.*
 # Local secrets and environment files
 .env
 .env.*
-!.env.example
 appsettings.Local.json
 appsettings.*.Local.json
 

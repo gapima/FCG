@@ -10,10 +10,7 @@ internal sealed class MapeamentoUsuario : IEntityTypeConfiguration<Usuario>
 
     public void Configure(EntityTypeBuilder<Usuario> construtor)
     {
-        construtor.ToTable("usuarios", tabela =>
-            tabela.HasCheckConstraint(
-                "ck_usuarios_perfil_id_nao_vazio",
-                "\"perfil_id\" <> '00000000-0000-0000-0000-000000000000'::uuid"));
+        construtor.ToTable("usuarios");
 
         construtor.HasKey(usuario => usuario.Id)
             .HasName("pk_usuarios");
@@ -49,7 +46,7 @@ internal sealed class MapeamentoUsuario : IEntityTypeConfiguration<Usuario>
 
         construtor.Property(usuario => usuario.PerfilId)
             .HasColumnName("perfil_id")
-            .HasColumnType("uuid")
+            .HasMaxLength(20)
             .IsRequired();
 
         construtor.Property(usuario => usuario.Ativo)
@@ -71,14 +68,5 @@ internal sealed class MapeamentoUsuario : IEntityTypeConfiguration<Usuario>
         construtor.HasIndex(usuario => usuario.Email)
             .IsUnique()
             .HasDatabaseName(NomeIndiceEmailUnico);
-
-        construtor.HasIndex(usuario => usuario.PerfilId)
-            .HasDatabaseName("ix_usuarios_perfil_id");
-
-        construtor.HasOne<Perfil>()
-            .WithMany()
-            .HasForeignKey(usuario => usuario.PerfilId)
-            .OnDelete(DeleteBehavior.Restrict)
-            .HasConstraintName("fk_usuarios_perfis");
     }
 }
