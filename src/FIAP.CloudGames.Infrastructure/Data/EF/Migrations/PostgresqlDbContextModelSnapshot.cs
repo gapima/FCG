@@ -243,22 +243,31 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("DataCriacao")
+                    b.Property<DateTimeOffset>("DataCriacao")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DataExpiracao")
+                    b.Property<DateTimeOffset>("DataExpiracao")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DataRevogacao")
+                    b.Property<DateTimeOffset?>("DataRevogacao")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("TokenValue")
+                    b.Property<string>("TokenHash")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("Token");
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("TokenHash");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("UsuarioId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UsuarioId");
 
                     b.ToTable("tb_Tokens", (string)null);
                 });
@@ -281,6 +290,18 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
                         .IsUnique();
 
                     b.ToTable("tb_Perfil", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            Nome = "Usuario"
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            Nome = "Administrador"
+                        });
                 });
 
             modelBuilder.Entity("FIAP.CloudGames.Domain.Identity.Entities.Usuario", b =>
@@ -417,6 +438,15 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
                 });
 
             modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.LogUsuario", b =>
+                {
+                    b.HasOne("FIAP.CloudGames.Domain.Identity.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.Token", b =>
                 {
                     b.HasOne("FIAP.CloudGames.Domain.Identity.Entities.Usuario", null)
                         .WithMany()

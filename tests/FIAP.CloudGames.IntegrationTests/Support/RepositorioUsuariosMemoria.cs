@@ -19,6 +19,18 @@ internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
     public Task<Usuario?> ObterPorEmailAsync(string email, CancellationToken tokenCancelamento = default) =>
         Task.FromResult(_usuarios.Values.SingleOrDefault(usuario => usuario.Email == email));
 
+    public Task<UsuarioAutenticacao?> ObterAutenticacaoPorEmailAsync(
+        string email,
+        CancellationToken tokenCancelamento = default)
+    {
+        tokenCancelamento.ThrowIfCancellationRequested();
+        var usuario = _usuarios.Values.SingleOrDefault(item => item.Email == email);
+        return Task.FromResult(
+            usuario is null
+                ? null
+                : new UsuarioAutenticacao(usuario, PerfisSistema.Usuario));
+    }
+
     public Task<bool> ExisteEmailAsync(string email, Guid? ignorarUsuarioId, CancellationToken tokenCancelamento = default) =>
         Task.FromResult(_usuarios.Values.Any(usuario => usuario.Email == email && usuario.Id != ignorarUsuarioId));
 
@@ -41,5 +53,15 @@ internal sealed class RepositorioUsuariosMemoria : IRepositoryUsuarios
         tokenCancelamento.ThrowIfCancellationRequested();
         _usuarios[usuario.Id] = usuario;
         return Task.CompletedTask;
+    }
+
+    public bool TentarInativar(string email, DateTimeOffset dataInativacao)
+    {
+        var usuario = _usuarios.Values.SingleOrDefault(item => item.Email == email);
+        if (usuario is null)
+            return false;
+
+        usuario.Inativar(dataInativacao.ToUniversalTime());
+        return true;
     }
 }

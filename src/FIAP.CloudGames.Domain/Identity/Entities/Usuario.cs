@@ -68,6 +68,15 @@ public sealed class Usuario
         PerfilId = perfilId;
     }
 
+    public void Inativar(DateTimeOffset dataInativacao)
+    {
+        if (dataInativacao.Offset != TimeSpan.Zero)
+            throw new ArgumentException("A data de inativação deve estar em UTC.", nameof(dataInativacao));
+
+        Ativo = false;
+        DataInativacao = dataInativacao;
+    }
+
     private static void ValidarIdentificador(Guid id)
     {
         if (id == Guid.Empty)

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FIAP.CloudGames.Infrastructure.Data.EF.Mappings;
 
-public class TokenMapping : IEntityTypeConfiguration<Token>
+internal sealed class TokenMapping : IEntityTypeConfiguration<Token>
 {
     public void Configure(EntityTypeBuilder<Token> builder)
     {
@@ -15,9 +15,13 @@ public class TokenMapping : IEntityTypeConfiguration<Token>
         builder.Property(x => x.Id)
             .ValueGeneratedNever();
 
-        builder.Property(x => x.TokenValue)
-            .HasColumnName("Token")
-            .HasMaxLength(200)
+        builder.Property(x => x.UsuarioId)
+            .HasColumnName("UsuarioId")
+            .IsRequired();
+
+        builder.Property(x => x.TokenHash)
+            .HasColumnName("TokenHash")
+            .HasMaxLength(64)
             .IsRequired();
 
         builder.Property(x => x.DataCriacao)
@@ -28,5 +32,15 @@ public class TokenMapping : IEntityTypeConfiguration<Token>
 
         builder.Property(x => x.DataRevogacao)
             .IsRequired(false);
+
+        builder.HasOne<FIAP.CloudGames.Domain.Identity.Entities.Usuario>()
+            .WithMany()
+            .HasForeignKey(x => x.UsuarioId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => x.TokenHash)
+            .IsUnique();
+
+        builder.HasIndex(x => x.UsuarioId);
     }
 }

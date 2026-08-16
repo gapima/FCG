@@ -9,5 +9,16 @@ Content-Type: application/json
 
 {
   "nome": "Usuário de exemplo",
-  "email": "usuario@exemplo.com"
+  "email": "usuario@exemplo.com",
+  "senha": "Senha@123"
+}
+
+###
+
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@exemplo.com",
+  "senha": "Senha@123"
 }

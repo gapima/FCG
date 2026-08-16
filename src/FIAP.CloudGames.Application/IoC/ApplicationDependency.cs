@@ -1,5 +1,6 @@
-using FIAP.CloudGames.Application.Identity.Usuarios;
 using FIAP.CloudGames.Application.Abstractions.Security;
+using FIAP.CloudGames.Application.Identity.Auth;
+using FIAP.CloudGames.Application.Identity.Usuarios;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FIAP.CloudGames.Application.IoC;
@@ -19,6 +20,7 @@ public static class ApplicationDependency
         servicos.AddScoped<ManipuladorCriarUsuario>();
         servicos.AddScoped<ManipuladorObterUsuario>();
         servicos.AddScoped<ManipuladorAtualizarUsuario>();
+        servicos.AddScoped<ManipuladorLogin>();
 
         return servicos;
     }
