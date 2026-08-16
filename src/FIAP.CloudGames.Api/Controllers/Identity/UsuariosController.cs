@@ -1,5 +1,6 @@
 using FIAP.CloudGames.Api.Contracts.Identity.Usuarios;
 using FIAP.CloudGames.Application.Identity.Usuarios;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FIAP.CloudGames.Api.Controllers.Identity;
@@ -12,6 +13,7 @@ namespace FIAP.CloudGames.Api.Controllers.Identity;
 [Tags("Usuários")]
 public sealed class UsuariosController : ControllerBase
 {
+    [AllowAnonymous]
     [HttpPost]
     [ProducesResponseType<RespostaCriarUsuario>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -22,7 +24,7 @@ public sealed class UsuariosController : ControllerBase
         CancellationToken tokenCancelamento)
     {
         var resultado = await manipulador.ProcessarAsync(
-            new ComandoCriarUsuario(requisicao.Nome, requisicao.Email, requisicao.PerfilId),
+            new ComandoCriarUsuario(requisicao.Nome, requisicao.Email, requisicao.Senha),
             tokenCancelamento);
 
         if (resultado.Status == StatusCriacaoUsuario.DadosInvalidos)

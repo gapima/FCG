@@ -26,6 +26,10 @@ public class MapeamentoPerfil : IEntityTypeConfiguration<Perfil>
         builder.HasIndex(x => x.Nome)
             .IsUnique();
 
+        builder.HasData(
+            new { Id = PerfisSistema.UsuarioId, Nome = PerfisSistema.Usuario },
+            new { Id = PerfisSistema.AdministradorId, Nome = PerfisSistema.Administrador });
+
         builder.HasMany<Permissao>()
             .WithOne()
             .HasForeignKey(x => x.PerfilId)

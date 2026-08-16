@@ -9,5 +9,5 @@ public sealed class RequisicaoCriarUsuario
 
     public string Email { get; init; } = string.Empty;
 
-    public Guid PerfilId { get; init; }
+    public string Senha { get; init; } = string.Empty;
 }

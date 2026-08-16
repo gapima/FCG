@@ -2,11 +2,12 @@ using FIAP.CloudGames.Domain.Identity.Entities;
 
 namespace FIAP.CloudGames.Application.Abstractions.Repositories;
 
-/// <summary>
-/// Define as operações de persistência necessárias pelos casos de uso de usuários.
-/// </summary>
 public interface IRepositoryUsuarios
 {
+    Task<UsuarioAutenticacao?> ObterPorEmailAsync(
+        string email,
+        CancellationToken tokenCancelamento = default);
+
     /// <summary>
     /// Persiste o usuário e retorna false quando o e-mail já estiver cadastrado.
     /// </summary>
@@ -14,3 +15,5 @@ public interface IRepositoryUsuarios
         Usuario usuario,
         CancellationToken tokenCancelamento = default);
 }
+
+public sealed record UsuarioAutenticacao(Usuario Usuario, string Perfil);

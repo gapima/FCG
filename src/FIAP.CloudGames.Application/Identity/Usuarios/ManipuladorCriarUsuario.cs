@@ -1,5 +1,6 @@
-using System.Net.Mail;
 using FIAP.CloudGames.Application.Abstractions.Repositories;
+using FIAP.CloudGames.Application.Abstractions.Security;
+using FIAP.CloudGames.Application.Identity;
 using FIAP.CloudGames.Domain.Identity.Entities;
 
 namespace FIAP.CloudGames.Application.Identity.Usuarios;
@@ -11,11 +12,16 @@ public sealed class ManipuladorCriarUsuario
 {
     private const int TamanhoMinimoNome = 3;
     private readonly IRepositoryUsuarios _repositoryUsuarios;
+    private readonly IServicoHashSenha _servicoHashSenha;
     private readonly TimeProvider _relogio;
 
-    public ManipuladorCriarUsuario(IRepositoryUsuarios repositoryUsuarios, TimeProvider relogio)
+    public ManipuladorCriarUsuario(
+        IRepositoryUsuarios repositoryUsuarios,
+        IServicoHashSenha servicoHashSenha,
+        TimeProvider relogio)
     {
         _repositoryUsuarios = repositoryUsuarios;
+        _servicoHashSenha = servicoHashSenha;
         _relogio = relogio;
     }
 
@@ -24,8 +30,8 @@ public sealed class ManipuladorCriarUsuario
     {
         ArgumentNullException.ThrowIfNull(comando);
 
-        var nomeNormalizado = NormalizarNome(comando.Nome);
-        var emailNormalizado = NormalizarEmail(comando.Email);
+        var nomeNormalizado = NormalizadorIdentidade.NormalizarNome(comando.Nome);
+        var emailNormalizado = NormalizadorIdentidade.NormalizarEmail(comando.Email);
         var erros = Validar(comando, nomeNormalizado, emailNormalizado);
 
         if (erros.Count > 0)
@@ -33,10 +39,12 @@ public sealed class ManipuladorCriarUsuario
             return ResultadoCriarUsuario.DadosInvalidos(erros);
         }
 
+        var senhaHash = _servicoHashSenha.GerarHash(comando.Senha);
         var usuario = new Usuario(
             Guid.NewGuid(),
             nomeNormalizado,
             emailNormalizado!,
+            senhaHash,
             comando.PerfilId,
             _relogio.GetUtcNow());
 
@@ -73,32 +81,17 @@ public sealed class ManipuladorCriarUsuario
             erros["email"] = ["Informe um e-mail válido."];
         }
 
+        var errosSenha = PoliticaSenha.Validar(comando.Senha);
+        if (errosSenha.Length > 0)
+        {
+            erros["senha"] = errosSenha;
+        }
+
         if (comando.PerfilId == Guid.Empty)
         {
             erros["perfilId"] = ["Informe um perfil válido."];
         }
 
         return erros;
-    }
-
-    private static string NormalizarNome(string? nome) =>
-        string.Join(' ',
-            (nome ?? string.Empty).Split(
-                ' ',
-                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-
-    private static string? NormalizarEmail(string? email)
-    {
-        var valor = email?.Trim();
-
-        if (string.IsNullOrWhiteSpace(valor)
-            || valor.Length > Usuario.TamanhoMaximoEmail
-            || !MailAddress.TryCreate(valor, out var endereco)
-            || !string.Equals(endereco.Address, valor, StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        return endereco.Address.ToLowerInvariant();
     }
 }

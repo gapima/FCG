@@ -30,12 +30,12 @@ internal sealed class MapeamentoUsuario : IEntityTypeConfiguration<Usuario>
         construtor.Property(usuario => usuario.CPF)
             .HasColumnName("cpf")
             .HasMaxLength(100)
-            .IsRequired();
+            .IsRequired(false);
 
         construtor.Property(usuario => usuario.DataNascimento)
             .HasColumnName("data_nascimento")
             .HasColumnType("timestamp with time zone")
-            .IsRequired();
+            .IsRequired(false);
 
         construtor.Property(usuario => usuario.Email)
             .HasColumnName("email")

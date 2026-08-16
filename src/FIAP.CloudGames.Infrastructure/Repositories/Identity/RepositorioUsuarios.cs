@@ -16,6 +16,16 @@ internal sealed class RepositorioUsuarios : IRepositoryUsuarios
         _contexto = contexto;
     }
 
+    public Task<UsuarioAutenticacao?> ObterPorEmailAsync(
+        string email,
+        CancellationToken tokenCancelamento = default) =>
+        (from usuario in _contexto.Usuarios.AsNoTracking()
+         join perfil in _contexto.Perfis.AsNoTracking()
+             on usuario.PerfilId equals perfil.Id
+         where usuario.Email == email
+         select new UsuarioAutenticacao(usuario, perfil.Nome))
+        .SingleOrDefaultAsync(tokenCancelamento);
+
     public async Task<bool> TentarAdicionarAsync(
         Usuario usuario,
         CancellationToken tokenCancelamento = default)

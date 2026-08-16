@@ -16,6 +16,7 @@ public sealed class TestesRelacionamentoUsuarioPerfil
             Guid.NewGuid(),
             "Maria da Silva",
             "maria@exemplo.com",
+            "hash-de-senha-valido",
             Guid.Empty,
             DateTimeOffset.UtcNow));
 
@@ -29,6 +30,7 @@ public sealed class TestesRelacionamentoUsuarioPerfil
             Guid.NewGuid(),
             "Maria da Silva",
             "maria@exemplo.com",
+            "hash-de-senha-valido",
             PerfilId,
             DateTimeOffset.UtcNow);
 

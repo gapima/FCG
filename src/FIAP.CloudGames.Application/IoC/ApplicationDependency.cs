@@ -1,3 +1,4 @@
+using FIAP.CloudGames.Application.Identity.Auth;
 using FIAP.CloudGames.Application.Identity.Usuarios;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,7 @@ public static class ApplicationDependency
 
         servicos.AddSingleton(TimeProvider.System);
         servicos.AddScoped<ManipuladorCriarUsuario>();
+        servicos.AddScoped<ManipuladorLogin>();
 
         return servicos;
     }
