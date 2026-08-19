@@ -1,0 +1,84 @@
+@host = http://localhost:5080
+@usuarioId = 00000000-0000-0000-0000-000000000000
+@accessToken = cole-o-access-token-aqui
+@refreshToken = cole-o-refresh-token-aqui
+
+GET {{host}}/health
+
+### Cadastro público: qualquer perfilId adicional é ignorado
+
+POST {{host}}/api/v1/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Usuário de exemplo",
+  "cpf": "12345678900",
+  "dataNascimento": "1990-01-01T00:00:00Z",
+  "email": "usuario@exemplo.com",
+  "senha": "Senha@123"
+}
+
+### Login
+
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "usuario@exemplo.com",
+  "senha": "Senha@123"
+}
+
+### Consultar o próprio usuário ou, como administrador, qualquer usuário
+
+GET {{host}}/api/v1/usuarios/{{usuarioId}}
+Authorization: Bearer {{accessToken}}
+
+### Atualizar dados sem alterar perfil
+
+PUT {{host}}/api/v1/usuarios/{{usuarioId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "nome": "Usuário atualizado",
+  "dataNascimento": "1990-01-01T00:00:00Z",
+  "email": "usuario.atualizado@exemplo.com"
+}
+
+### Renovar tokens: o refresh token anterior deixa de funcionar
+
+POST {{host}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Logout: revoga todos os refresh tokens ativos do usuário
+
+POST {{host}}/api/v1/auth/logout
+Authorization: Bearer {{accessToken}}
+
+### Criar administrador (somente role Administrador)
+
+POST {{host}}/api/v1/usuarios/administradores
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "nome": "Novo administrador",
+  "cpf": "98765432100",
+  "dataNascimento": "1990-01-01T00:00:00Z",
+  "email": "novo.admin@exemplo.com",
+  "senha": "Senha@123"
+}
+
+### Promover ou alterar perfil (somente role Administrador)
+
+PUT {{host}}/api/v1/usuarios/{{usuarioId}}/perfil
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "perfilId": "22222222-2222-2222-2222-222222222222"
+}

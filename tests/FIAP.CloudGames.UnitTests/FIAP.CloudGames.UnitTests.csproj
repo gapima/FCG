@@ -19,11 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\FIAP.CloudGames.Application\FIAP.CloudGames.Application.csproj" />
-    <ProjectReference Include="..\..\src\FIAP.CloudGames.Infrastructure\FIAP.CloudGames.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 </Project>
