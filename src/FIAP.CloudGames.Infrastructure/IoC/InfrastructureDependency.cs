@@ -1,5 +1,6 @@
 using FIAP.CloudGames.Application.Abstractions.Repositories;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
+using FIAP.CloudGames.Infrastructure.Repositories.Catalog;
 using FIAP.CloudGames.Infrastructure.Repositories.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +13,11 @@ namespace FIAP.CloudGames.Infrastructure.IoC;
 /// </summary>
 public static class InfrastructureDependency
 {
-    public const string NomeConnectionString = "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=@Testesenha123456";
+    public const string NomeConnectionString = "PostgreSql";
+
+    // Espelha os valores padrão definidos em docker-compose.yml (POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB/porta).
+    private const string ConexaoPostgreSqlPadrao =
+        "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=@Testesenha123456";
 
     public static IServiceCollection RegistrarInfrastructureDependency(
         this IServiceCollection servicos,
@@ -21,14 +26,12 @@ public static class InfrastructureDependency
         ArgumentNullException.ThrowIfNull(servicos);
         ArgumentNullException.ThrowIfNull(configuracao);
 
-        //var connectionString = configuracao.GetConnectionString(NomeConnectionString)
-        //    ?? throw new InvalidOperationException(
-        //        $"ConnectionStrings:{NomeConnectionString} deve ser configurada por User Secrets "
-        //        + "ou por uma variável de ambiente.");
+        var connectionString = configuracao.GetConnectionString(NomeConnectionString)
+            ?? ConexaoPostgreSqlPadrao;
 
         servicos.AddDbContext<PostgresqlDbContext>(opcoes =>
             opcoes.UseNpgsql(
-                NomeConnectionString,
+                connectionString,
                 opcoesPostgreSql =>
                 {
                     opcoesPostgreSql.MigrationsAssembly(
@@ -41,6 +44,7 @@ public static class InfrastructureDependency
                 }));
 
         servicos.AddScoped<IRepositoryUsuarios, RepositorioUsuarios>();
+        servicos.AddScoped<IRepositorioJogos, RepositorioJogos>();
 
         return servicos;
     }
