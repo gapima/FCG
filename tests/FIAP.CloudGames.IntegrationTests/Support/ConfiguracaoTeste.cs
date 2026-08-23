@@ -7,6 +7,11 @@ internal static class ConfiguracaoTeste
         {
             ["Swagger:Enabled"] = "true",
             ["ConnectionStrings:PostgreSql"] =
-                "Host=localhost;Database=fiap_cloud_games_tests;Username=postgres;Password=tests"
+                "Host=localhost;Database=fiap_cloud_games_tests;Username=postgres;Password=tests",
+            ["Jwt:Issuer"] = "FIAP.CloudGames.Tests",
+            ["Jwt:Audience"] = "FIAP.CloudGames.Api.Tests",
+            ["Jwt:SigningKey"] = "CHAVE-DE-TESTE-COM-PELO-MENOS-32-BYTES",
+            ["Jwt:AccessTokenExpirationMinutes"] = "20",
+            ["Jwt:RefreshTokenExpirationDays"] = "7"
         };
 }

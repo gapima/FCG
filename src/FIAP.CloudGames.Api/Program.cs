@@ -9,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddProblemDetailsApi();
 builder.Services.AddHealthChecks();
 builder.Services.AdicionarDocumentacaoSwagger();
+builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 
 // Serviços organizados pelas respectivas camadas.
 builder.Services.RegistrarApplicationDependency();
@@ -19,6 +20,8 @@ var app = builder.Build();
 // O manipulador nativo de exceções converte falhas inesperadas em respostas Problem Details.
 app.UseExceptionHandler();
 app.UsarDocumentacaoSwagger();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapHealthChecks("/health");
 app.MapControllers();
