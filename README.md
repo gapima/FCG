@@ -1,203 +1,65 @@
 # FIAP Cloud Games
 
-API REST acadêmica em .NET 8 com arquitetura em camadas, organização vertical por negócio e persistência PostgreSQL por meio do Entity Framework Core.
+API REST acadêmica em .NET 10 com arquitetura em camadas e persistência preparada para PostgreSQL por meio do Entity Framework Core.
 
-## Estrutura da solução
+## Arquitetura
 
-```text
-src/
-|-- FIAP.CloudGames.Api
-|-- FIAP.CloudGames.Application
-|-- FIAP.CloudGames.Domain
-`-- FIAP.CloudGames.Infrastructure
-tests/
-|-- FIAP.CloudGames.UnitTests
-`-- FIAP.CloudGames.IntegrationTests
+Detalhes sobre a arquitetura do projeto estão descritos em [Architecture.md](https://github.com/gapima/FCG/blob/fature/proj-documentation/Architure.md).
+
+## Executar localmente
+
+Clonar o projeto
+
+```bash
+git clone https://github.com/gapima/FCG.git
+cd FCG
 ```
 
-- `Domain`: entidades e invariantes de negócio, sem dependências técnicas.
-- `Application`: casos de uso e contratos necessários para executá-los.
-- `Infrastructure`: Entity Framework Core, PostgreSQL e implementações dos contratos.
-- `Api`: controllers, contratos HTTP, configuração e ponto de composição.
+Existem duas maneiras comuns de executar o projeto: localmente com o SDK do .NET, ou com Docker.
 
-## Pré-requisitos
+Opção A — Local (.NET)
 
-- .NET SDK 8;
-- Docker Desktop com Docker Compose para o ambiente local recomendado;
-- ou uma instância PostgreSQL acessível, caso a API seja executada sem Docker;
-- ferramenta local do Entity Framework Core restaurada pelo manifesto do repositório.
+- Pré-requisitos: .NET 10 SDK, ferramentas `dotnet-ef` instaladas, e uma instância PostgreSQL em execução. Configure a connection string em `src/FIAP.CloudGames.Api/appsettings.Development.json` ou via variável de ambiente `ConnectionStrings__DefaultConnection`.
 
-Na raiz da solução:
+Executar migrations:
 
-```powershell
+```bash
+cd src/FIAP.CloudGames.Api
 dotnet tool restore
-dotnet restore
+dotnet ef database update
 ```
 
-## Executar com Docker — recomendado
+Iniciar o servidor:
 
-O Compose da raiz inicia PostgreSQL, aplica as migrations em um serviço de execução única e inicia a API:
-
-```powershell
-Copy-Item .env.example .env
-# Edite POSTGRES_PASSWORD e JWT_SIGNING_KEY antes da primeira subida.
-docker compose up -d --build
-docker compose ps -a
+```bash
+dotnet run --project FIAP.CloudGames.Api.Presentation.csproj --urls "http://localhost:5000"
 ```
 
-Endereços padrão:
+Opção B — Docker
 
-- Swagger: `http://localhost:5080/swagger`;
-- health check: `http://localhost:5080/health`;
-- PostgreSQL: `localhost:5432`.
+Construir a imagem Docker usando o `Dockerfile` fornecido:
 
-O serviço `migrations` deve terminar como `Exited (0)`. O PostgreSQL usa o volume persistente `fiap-cloud-games-postgres-data`.
-
-Consulte [o guia Docker completo](docs/GUIA-DOCKER.md) para entender onde o login é persistido, testar pelo Postman e inspecionar `tb_Tokens` no Docker Desktop.
-
-## Executar API fora do Docker
-
-A origem pretendida para a conexão é `ConnectionStrings:PostgreSql`. Armazene credenciais locais em User Secrets:
-
-```powershell
-dotnet user-secrets set "ConnectionStrings:PostgreSql" "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=SUA_SENHA" --project src/FIAP.CloudGames.Api
+```bash
+docker build -t fiap-cloudgames .
 ```
 
-Também é possível usar a variável de ambiente `ConnectionStrings__PostgreSql`.
+Executar o container (exemplo mapeando a porta 80 do container para a porta 5000 do host):
 
-Configure também uma chave JWT com pelo menos 32 bytes:
-
-```powershell
-$chaveJwtLocal = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
-dotnet user-secrets set "Jwt:SigningKey" $chaveJwtLocal --project src/FIAP.CloudGames.Api
+```bash
+docker run -e ASPNETCORE_ENVIRONMENT=Development -p 5000:80 --name fiap-cloudgames fiap-cloudgames
 ```
 
-Também é possível usar `Jwt__SigningKey`. Não versione credenciais ou chaves reais.
+Para executar as migrations do EF a partir de um container (execução pontual), passe a connection string e execute `dotnet ef database update` dentro da imagem. Exemplo (ajuste caminhos e connection string conforme necessário):
 
-```powershell
-dotnet run --project src/FIAP.CloudGames.Api
+```bash
+docker run --rm \
+  -e ConnectionStrings__DefaultConnection="Host=host.docker.internal;Port=5432;Username=postgres;Password=secret;Database=fiap" \
+  --entrypoint dotnet fiap-cloudgames \
+  /app/src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj ef database update --project /app/src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj
 ```
 
-Endereços padrão do perfil HTTP:
+Observações:
+- Substitua os valores da connection string pelos dados do seu PostgreSQL (host, porta, usuário, senha, database).
+- Ao usar Docker no Windows, `host.docker.internal` aponta para a máquina host.
 
-- Swagger: `http://localhost:5080/swagger`
-- Health check: `http://localhost:5080/health`
 
-O Swagger é habilitado apenas em `Development` quando `Swagger:Enabled` for `true`.
-
-## Endpoint-guia de criação de usuário
-
-`POST /api/v1/usuarios`
-
-```json
-{
-  "nome": "Usuário de exemplo",
-  "cpf": "12345678900",
-  "dataNascimento": "1990-01-01T00:00:00Z",
-  "email": "usuario@exemplo.com",
-  "senha": "Senha@123"
-}
-```
-
-Respostas principais:
-
-| Situação | Código HTTP |
-|---|---:|
-| Usuário criado | 201 |
-| Dados inválidos | 400 |
-| E-mail ou CPF já cadastrado | 409 |
-
-O cadastro público sempre cria o perfil `Usuario`. Um `perfilId` adicional enviado no JSON é ignorado e não permite criar um administrador. O nome, o CPF e o e-mail são normalizados antes da criação da entidade. A senha deve ter pelo menos oito caracteres, letra maiúscula, letra minúscula, número e caractere especial, e somente seu hash é persistido.
-
-## Login
-
-`POST /api/v1/auth/login`
-
-```json
-{
-  "email": "usuario@exemplo.com",
-  "senha": "Senha@123"
-}
-```
-
-O login retorna access token JWT de curta duração e refresh token. O access token não é persistido, e somente o hash do refresh token é salvo em `tb_Tokens`.
-
-## Autorização, refresh e logout
-
-| Endpoint | Autorização | Regra |
-|---|---|---|
-| `POST /api/v1/usuarios` | Público | Sempre cria o perfil `Usuario` |
-| `GET /api/v1/usuarios/{id}` | Bearer JWT | Próprio usuário ou `Administrador` |
-| `PUT /api/v1/usuarios/{id}` | Bearer JWT | Próprio usuário ou `Administrador`; nunca altera perfil |
-| `POST /api/v1/usuarios/administradores` | `Administrador` | Cria um administrador |
-| `PUT /api/v1/usuarios/{id}/perfil` | `Administrador` | Promove ou altera o perfil de um usuário |
-| `POST /api/v1/auth/refresh` | Refresh token | Rotaciona o refresh token e retorna um novo par |
-| `POST /api/v1/auth/logout` | Bearer JWT | Revoga todos os refresh tokens ativos do usuário |
-
-Para renovar a sessão:
-
-```json
-{
-  "refreshToken": "valor-retornado-pelo-login"
-}
-```
-
-Cada refresh token é de uso único. Após uma renovação, reutilizar o valor anterior resulta em `401 Unauthorized`. O logout revoga os refresh tokens, mas o access token JWT já emitido continua válido até sua expiração curta.
-
-Em um banco novo, o primeiro administrador deve ser provisionado fora da API. Cadastre inicialmente um usuário comum e execute uma única vez, com acesso operacional controlado ao PostgreSQL:
-
-```sql
-UPDATE usuarios
-SET perfil_id = '22222222-2222-2222-2222-222222222222'
-WHERE email = 'admin@exemplo.com';
-```
-
-Depois, faça login novamente para que o novo JWT contenha a role `Administrador`. Os administradores seguintes devem ser criados ou promovidos somente pelos endpoints protegidos.
-
-## IoC e injeção de dependência
-
-O `Program.cs` é a raiz de composição: registra os serviços próprios da API e delega os registros de cada camada a duas classes:
-
-- `ApplicationDependency`, em `Application/IoC`, registra casos de uso e serviços da aplicação;
-- `InfrastructureDependency`, em `Infrastructure/IoC`, valida a connection string e registra Entity Framework Core, PostgreSQL e repositórios.
-
-Nenhuma dessas classes resolve serviços manualmente ou guarda um `IServiceProvider`; portanto, não funcionam como service locator. Controllers e casos de uso continuam recebendo dependências pelo contêiner.
-
-## Migrations
-
-O projeto contém `InitialCreate`, `AdicionarDemaisEntidades`, `CorrigirPerfilIdUsuario` e `ImplementarLoginJwtRefreshToken` em `Infrastructure/Data/EF/Migrations`. A aplicação não chama `Database.Migrate()` automaticamente. No Compose, o serviço isolado `migrations` executa `dotnet ef database update` antes da API.
-
-Para consultar as migrations com a ferramenta local:
-
-```powershell
-dotnet tool restore
-dotnet ef migrations list --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api --context PostgresqlDbContext
-```
-
-Para verificar se o modelo compilado divergiu do snapshot, sem gerar nem aplicar migration:
-
-```powershell
-dotnet ef migrations has-pending-model-changes --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api --context PostgresqlDbContext
-```
-
-Não recrie ou altere migrations sem coordenar com o grupo. O Compose aplica as migrations existentes somente no PostgreSQL apontado pela configuração local.
-
-## Validação do projeto
-
-```powershell
-dotnet restore FIAP.CloudGames.sln
-dotnet build FIAP.CloudGames.sln --no-restore --configuration Release
-dotnet test FIAP.CloudGames.sln --no-build --no-restore --configuration Release
-dotnet format FIAP.CloudGames.sln --no-restore --verify-no-changes
-```
-
-Os testes HTTP substituem os repositórios por implementações em memória. Assim, permanecem determinísticos sem alterar a configuração PostgreSQL usada pela aplicação.
-
-## Limites atuais
-
-- Fora do Compose, nenhuma migration é aplicada automaticamente; no Docker, o serviço `migrations` é responsável por essa etapa.
-- O health check comprova a disponibilidade do processo, não a conexão com o banco.
-- Os módulos possuem organização inicial, mas ainda não têm fronteiras arquiteturais protegidas.
-- O logout revoga refresh tokens, mas não mantém uma blacklist de access tokens; o JWT atual expira naturalmente.
-- O primeiro administrador exige provisionamento operacional controlado no banco.
-- Antes de produção, devem ser definidos observabilidade, readiness, estratégia de migrations e proteção contra abuso.
