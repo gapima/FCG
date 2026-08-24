@@ -1,7 +1,9 @@
 using FIAP.CloudGames.Application.Abstractions.Repositories;
+using FIAP.CloudGames.Application.Abstractions.Security;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
 using FIAP.CloudGames.Infrastructure.Repositories.Catalog;
 using FIAP.CloudGames.Infrastructure.Repositories.Identity;
+using FIAP.CloudGames.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +47,13 @@ public static class InfrastructureDependency
 
         servicos.AddScoped<IRepositoryUsuarios, RepositorioUsuarios>();
         servicos.AddScoped<IRepositorioJogos, RepositorioJogos>();
+        servicos.AddScoped<IRepositorioTokens, RepositorioTokens>();
+
+        var configuracaoJwt = ConfiguracaoJwt.Criar(configuracao);
+        servicos.AddSingleton(configuracaoJwt);
+        servicos.AddSingleton<IServicoHashSenha, ServicoHashSenha>();
+        servicos.AddScoped<IServicoTokenJwt, ServicoTokenJwt>();
+        servicos.AddScoped<IServicoRefreshToken, ServicoRefreshToken>();
 
         return servicos;
     }
