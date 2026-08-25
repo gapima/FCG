@@ -3,6 +3,7 @@ using FIAP.CloudGames.Infrastructure.IoC;
 using FIAP.CloudGames.Modules.Acquisition;
 using FIAP.CloudGames.Modules.Catalog;
 using FIAP.CloudGames.Modules.Identity;
+using FIAP.CloudGames.Modules.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddAcquisitionModule(builder.Configuration);
+builder.Services.AddLoggingModule(builder.Configuration);
 
 var app = builder.Build();
 

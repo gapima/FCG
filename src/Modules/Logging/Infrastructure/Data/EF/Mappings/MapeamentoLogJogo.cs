@@ -1,15 +1,14 @@
 using FIAP.CloudGames.Domain.Entities;
-using FIAP.CloudGames.Domain.Identity.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace FIAP.CloudGames.Infrastructure.Data.EF.Mappings.Logs;
 
-public class MapeamentoLogUsuario : IEntityTypeConfiguration<LogUsuario>
+public class MapeamentoLogJogo : IEntityTypeConfiguration<LogJogo>
 {
-    public void Configure(EntityTypeBuilder<LogUsuario> builder)
+    public void Configure(EntityTypeBuilder<LogJogo> builder)
     {
-        builder.ToTable("tb_LogUsuarios");
+        builder.ToTable("tb_LogJogos");
 
         builder.HasKey(x => x.Id);
 
@@ -18,8 +17,8 @@ public class MapeamentoLogUsuario : IEntityTypeConfiguration<LogUsuario>
             .HasColumnType("uuid")
             .IsRequired();
 
-        builder.Property(x => x.UsuarioId)
-            .HasColumnName("UsuarioId")
+        builder.Property(x => x.JogoId)
+            .HasColumnName("JogoId")
             .HasColumnType("uuid")
             .IsRequired();
 
@@ -33,11 +32,6 @@ public class MapeamentoLogUsuario : IEntityTypeConfiguration<LogUsuario>
             .HasColumnType("timestamp with time zone")
             .IsRequired();
 
-        builder.HasOne<Usuario>()
-            .WithMany()
-            .HasForeignKey(x => x.UsuarioId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasIndex(x => x.UsuarioId);
+        builder.HasIndex(x => x.JogoId);
     }
 }
