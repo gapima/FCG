@@ -2,5 +2,6 @@
   <ItemGroup>
     <Compile Include="..\Modules\Identity\Domain\**\*.cs" Link="Identity\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Modules\Catalog\Domain\**\*.cs" Link="Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Modules\Acquisition\Domain\**\*.cs" Link="Acquisition\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
