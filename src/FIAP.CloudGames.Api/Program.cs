@@ -7,7 +7,9 @@ using FIAP.CloudGames.Modules.Logging;
 var builder = WebApplication.CreateBuilder(args);
 
 // Serviços próprios da API e do pipeline HTTP.
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddApplicationPart(typeof(IdentityModuleDependency).Assembly);
 builder.Services.AddProblemDetailsApi();
 builder.Services.AddHealthChecks();
 builder.Services.AdicionarDocumentacaoSwagger();

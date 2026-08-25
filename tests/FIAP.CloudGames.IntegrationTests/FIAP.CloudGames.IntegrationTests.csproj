@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Identity\FIAP.CloudGames.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\src\FIAP.CloudGames.Api\FIAP.CloudGames.Api.Presentation.csproj" />
   </ItemGroup>
 

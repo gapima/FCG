@@ -8,6 +8,7 @@ COPY [".config/dotnet-tools.json", ".config/dotnet-tools.json"]
 COPY [".editorconfig", ".editorconfig"]
 COPY ["Directory.Build.props", "Directory.Build.props"]
 COPY ["Directory.Packages.props", "Directory.Packages.props"]
+COPY ["src/Modules/Identity/FIAP.CloudGames.Modules.Identity.csproj", "src/Modules/Identity/"]
 COPY ["src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj", "src/FIAP.CloudGames.Api/"]
 COPY ["src/FIAP.CloudGames.Application/FIAP.CloudGames.Application.csproj", "src/FIAP.CloudGames.Application/"]
 COPY ["src/FIAP.CloudGames.Domain/FIAP.CloudGames.Domain.csproj", "src/FIAP.CloudGames.Domain/"]
@@ -26,7 +27,7 @@ RUN dotnet build "src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.cspro
 
 FROM build AS migrations
 
-ENTRYPOINT ["sh", "-c", "dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext --configuration Release --no-build"]
+ENTRYPOINT ["sh", "-c", "dotnet ef database update --project src/Modules/Identity/FIAP.CloudGames.Modules.Identity.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext --configuration Release --no-build"]
 
 FROM build AS publish
 
