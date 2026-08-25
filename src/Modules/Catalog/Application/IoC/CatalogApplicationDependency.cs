@@ -3,12 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FIAP.CloudGames.Application.IoC;
 
-/// <summary>
-/// Centraliza o registro dos casos de uso e serviços da camada de aplicação.
-/// </summary>
-public static class ApplicationDependency
+public static class CatalogApplicationDependency
 {
-    public static IServiceCollection RegistrarApplicationDependency(
+    public static IServiceCollection RegistrarCatalogApplicationDependency(
         this IServiceCollection servicos)
     {
         ArgumentNullException.ThrowIfNull(servicos);

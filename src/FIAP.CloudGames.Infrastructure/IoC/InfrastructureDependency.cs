@@ -1,6 +1,4 @@
-using FIAP.CloudGames.Application.Abstractions.Repositories;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
-using FIAP.CloudGames.Infrastructure.Repositories.Catalog;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,8 +39,6 @@ public static class InfrastructureDependency
                         maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorCodesToAdd: null);
                 }));
-
-        servicos.AddScoped<IRepositorioJogos, RepositorioJogos>();
 
         return servicos;
     }

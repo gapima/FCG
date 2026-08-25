@@ -1,6 +1,6 @@
 using FIAP.CloudGames.Api.Configuration;
-using FIAP.CloudGames.Application.IoC;
 using FIAP.CloudGames.Infrastructure.IoC;
+using FIAP.CloudGames.Modules.Catalog;
 using FIAP.CloudGames.Modules.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,10 +12,10 @@ builder.Services.AddHealthChecks();
 builder.Services.AdicionarDocumentacaoSwagger();
 builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 
-// Serviços organizados pelas respectivas camadas.
-builder.Services.RegistrarApplicationDependency();
+// Persistência compartilhada e módulos funcionais.
 builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCatalogModule();
 
 var app = builder.Build();
 
