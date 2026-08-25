@@ -1,7 +1,6 @@
 using FIAP.CloudGames.Application.Abstractions.Repositories;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
 using FIAP.CloudGames.Infrastructure.Repositories.Catalog;
-using FIAP.CloudGames.Infrastructure.Repositories.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,7 +42,6 @@ public static class InfrastructureDependency
                         errorCodesToAdd: null);
                 }));
 
-        servicos.AddScoped<IRepositoryUsuarios, RepositorioUsuarios>();
         servicos.AddScoped<IRepositorioJogos, RepositorioJogos>();
 
         return servicos;

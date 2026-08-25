@@ -1,2 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="..\Modules\Identity\Domain\**\*.cs" Link="Identity\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

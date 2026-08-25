@@ -17,4 +17,8 @@
     <Folder Include="Data\Dapper\" />
     <Folder Include="Services\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Modules\Identity\Infrastructure\**\*.cs" Link="Identity\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>

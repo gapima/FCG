@@ -1,6 +1,7 @@
 using FIAP.CloudGames.Api.Configuration;
 using FIAP.CloudGames.Application.IoC;
 using FIAP.CloudGames.Infrastructure.IoC;
+using FIAP.CloudGames.Modules.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,7 @@ builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 // Serviços organizados pelas respectivas camadas.
 builder.Services.RegistrarApplicationDependency();
 builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
+builder.Services.AddIdentityModule(builder.Configuration);
 
 var app = builder.Build();
 
