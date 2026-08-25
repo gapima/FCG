@@ -7,9 +7,9 @@ namespace FIAP.CloudGames.Infrastructure.Repositories.Catalog;
 
 internal sealed class RepositorioJogos : IRepositorioJogos
 {
-    private readonly PostgresqlDbContext _contexto;
+    private readonly CatalogDbContext _contexto;
 
-    public RepositorioJogos(PostgresqlDbContext contexto)
+    public RepositorioJogos(CatalogDbContext contexto)
     {
         _contexto = contexto;
     }

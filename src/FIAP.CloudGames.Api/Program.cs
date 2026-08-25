@@ -15,7 +15,7 @@ builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 // Persistência compartilhada e módulos funcionais.
 builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
-builder.Services.AddCatalogModule();
+builder.Services.AddCatalogModule(builder.Configuration);
 
 var app = builder.Build();
 

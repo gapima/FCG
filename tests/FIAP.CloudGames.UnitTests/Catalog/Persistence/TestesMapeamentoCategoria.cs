@@ -11,11 +11,11 @@ public sealed class TestesMapeamentoCategoria
     public void Modelo_ConfiguraNomeDaCategoriaComoObrigatorio()
     {
         // Arrange
-        var opcoes = new DbContextOptionsBuilder<PostgresqlDbContext>()
+        var opcoes = new DbContextOptionsBuilder<CatalogDbContext>()
             .UseNpgsql(
                 "Host=localhost;Database=FIAP.CloudGames;Username=postgres;Password=postgres")
             .Options;
-        using var contexto = new PostgresqlDbContext(opcoes);
+        using var contexto = new CatalogDbContext(opcoes);
 
         // Act
         var entidade = contexto.Model.FindEntityType(typeof(Categoria));   
@@ -34,11 +34,11 @@ public sealed class TestesMapeamentoCategoria
     public void Modelo_ConfiguraNomeDaCategoriaComTamanhoMaximoDe200Caracteres()
     {
         // Arrange
-        var opcoes = new DbContextOptionsBuilder<PostgresqlDbContext>()
+        var opcoes = new DbContextOptionsBuilder<CatalogDbContext>()
             .UseNpgsql(
                 "Host=localhost;Database=FIAP.CloudGames;Username=postgres;Password=postgres")
             .Options;
-        using var contexto = new PostgresqlDbContext(opcoes);
+        using var contexto = new CatalogDbContext(opcoes);
 
         // Act
         var entidade = contexto.Model.FindEntityType(typeof(Categoria));   
@@ -52,4 +52,3 @@ public sealed class TestesMapeamentoCategoria
     }
 
 }
-
