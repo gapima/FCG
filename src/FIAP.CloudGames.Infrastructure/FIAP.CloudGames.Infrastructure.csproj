@@ -14,11 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Dapper\" />
-    <Folder Include="Services\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Modules\Identity\Infrastructure\**\*.cs" Link="Identity\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Modules\Catalog\Infrastructure\**\*.cs" Link="Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Modules\Acquisition\Infrastructure\**\*.cs" Link="Acquisition\%(RecursiveDir)%(Filename)%(Extension)" />

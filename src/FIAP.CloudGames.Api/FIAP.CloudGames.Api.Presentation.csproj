@@ -18,10 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="..\Modules\Identity\Api\**\*.cs" Link="Identity\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Modules\Catalog\Api\**\*.cs" Link="Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
