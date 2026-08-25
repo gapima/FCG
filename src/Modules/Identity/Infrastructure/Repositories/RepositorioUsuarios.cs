@@ -9,9 +9,9 @@ namespace FIAP.CloudGames.Infrastructure.Repositories.Identity;
 
 internal sealed class RepositorioUsuarios : IRepositoryUsuarios
 {
-    private readonly PostgresqlDbContext _contexto;
+    private readonly IdentityDbContext _contexto;
 
-    public RepositorioUsuarios(PostgresqlDbContext contexto)
+    public RepositorioUsuarios(IdentityDbContext contexto)
     {
         _contexto = contexto;
     }

@@ -13,7 +13,7 @@ public static class InfrastructureDependency
     public const string NomeConnectionString = "PostgreSql";
 
     // Espelha os valores padrão definidos em docker-compose.yml (POSTGRES_USER/POSTGRES_PASSWORD/POSTGRES_DB/porta).
-    private const string ConexaoPostgreSqlPadrao =
+    internal const string ConexaoPostgreSqlPadrao =
         "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=@Testesenha123456";
 
     public static IServiceCollection RegistrarInfrastructureDependency(

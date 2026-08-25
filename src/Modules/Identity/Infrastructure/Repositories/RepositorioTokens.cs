@@ -7,9 +7,9 @@ namespace FIAP.CloudGames.Infrastructure.Repositories.Identity;
 
 internal sealed class RepositorioTokens : IRepositorioTokens
 {
-    private readonly PostgresqlDbContext _contexto;
+    private readonly IdentityDbContext _contexto;
 
-    public RepositorioTokens(PostgresqlDbContext contexto)
+    public RepositorioTokens(IdentityDbContext contexto)
     {
         _contexto = contexto;
     }

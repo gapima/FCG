@@ -1,5 +1,4 @@
 using FIAP.CloudGames.Domain.AccessControl.Entities;
-using FIAP.CloudGames.Domain.Catalog.Entities;
 using FIAP.CloudGames.Domain.Identity.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -24,11 +23,6 @@ public class AutorizacaoMapping : IEntityTypeConfiguration<Autorizacao>
         builder.HasOne<Usuario>()
             .WithMany()
             .HasForeignKey(x => x.UsuarioId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne<Jogo>()
-            .WithMany()
-            .HasForeignKey(x => x.JogoId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(x => new { x.UsuarioId, x.JogoId })
