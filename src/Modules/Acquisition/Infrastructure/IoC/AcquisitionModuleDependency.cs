@@ -1,4 +1,3 @@
-using FIAP.CloudGames.Infrastructure.Data.EF;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,7 +14,10 @@ public static class AcquisitionModuleDependency
         ArgumentNullException.ThrowIfNull(servicos);
         ArgumentNullException.ThrowIfNull(configuracao);
 
-        var connectionString = ConfiguracaoPostgreSql.ObterConnectionString(configuracao);
+        var connectionString = configuracao.GetConnectionString("PostgreSql");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "ConnectionStrings:PostgreSql deve ser configurada.");
 
         servicos.AddDbContext<AcquisitionDbContext>(opcoes =>
             opcoes.UseNpgsql(

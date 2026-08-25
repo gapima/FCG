@@ -1,6 +1,5 @@
 using FIAP.CloudGames.Application.Abstractions.Repositories;
 using FIAP.CloudGames.Application.IoC;
-using FIAP.CloudGames.Infrastructure.Data.EF;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
 using FIAP.CloudGames.Infrastructure.Repositories.Catalog;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +17,10 @@ public static class CatalogModuleDependency
         ArgumentNullException.ThrowIfNull(servicos);
         ArgumentNullException.ThrowIfNull(configuracao);
 
-        var connectionString = ConfiguracaoPostgreSql.ObterConnectionString(configuracao);
+        var connectionString = configuracao.GetConnectionString("PostgreSql");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "ConnectionStrings:PostgreSql deve ser configurada.");
 
         servicos.RegistrarCatalogApplicationDependency();
         servicos.AddDbContext<CatalogDbContext>(opcoes =>
