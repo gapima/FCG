@@ -6,6 +6,8 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Context;
 
 public sealed class LoggingDbContext : DbContext
 {
+    public const string Schema = "logging";
+
     public LoggingDbContext(DbContextOptions<LoggingDbContext> opcoes)
         : base(opcoes)
     {
@@ -16,6 +18,7 @@ public sealed class LoggingDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new MapeamentoLogUsuario());
         modelBuilder.ApplyConfiguration(new MapeamentoLogJogo());
     }

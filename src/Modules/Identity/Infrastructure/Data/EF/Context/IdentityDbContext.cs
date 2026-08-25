@@ -10,6 +10,8 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Context;
 
 public sealed class IdentityDbContext : DbContext
 {
+    public const string Schema = "identity";
+
     public IdentityDbContext(DbContextOptions<IdentityDbContext> opcoes)
         : base(opcoes)
     {
@@ -23,6 +25,7 @@ public sealed class IdentityDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new MapeamentoUsuario());
         modelBuilder.ApplyConfiguration(new MapeamentoPerfil());
         modelBuilder.ApplyConfiguration(new TokenMapping());

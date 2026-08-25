@@ -1,5 +1,5 @@
+using FIAP.CloudGames.Infrastructure.Data.EF;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
-using FIAP.CloudGames.Infrastructure.IoC;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,17 +15,22 @@ public static class AcquisitionModuleDependency
         ArgumentNullException.ThrowIfNull(servicos);
         ArgumentNullException.ThrowIfNull(configuracao);
 
-        var connectionString = configuracao.GetConnectionString(
-                InfrastructureDependency.NomeConnectionString)
-            ?? InfrastructureDependency.ConexaoPostgreSqlPadrao;
+        var connectionString = ConfiguracaoPostgreSql.ObterConnectionString(configuracao);
 
         servicos.AddDbContext<AcquisitionDbContext>(opcoes =>
             opcoes.UseNpgsql(
                 connectionString,
-                opcoesPostgreSql => opcoesPostgreSql.EnableRetryOnFailure(
-                    maxRetryCount: 5,
-                    maxRetryDelay: TimeSpan.FromSeconds(10),
-                    errorCodesToAdd: null)));
+                opcoesPostgreSql =>
+                {
+                    opcoesPostgreSql.MigrationsAssembly(typeof(AcquisitionDbContext).Assembly.FullName);
+                    opcoesPostgreSql.MigrationsHistoryTable(
+                        "__EFMigrationsHistory",
+                        AcquisitionDbContext.Schema);
+                    opcoesPostgreSql.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorCodesToAdd: null);
+                }));
 
         return servicos;
     }

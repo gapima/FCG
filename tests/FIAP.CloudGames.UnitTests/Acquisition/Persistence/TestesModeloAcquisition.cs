@@ -14,6 +14,8 @@ public sealed class TestesModeloAcquisition
     {
         using var contexto = CriarContexto();
 
+        Assert.Equal(AcquisitionDbContext.Schema, contexto.Model.GetDefaultSchema());
+
         var tiposMapeados = contexto.Model.GetEntityTypes()
             .Select(entidade => entidade.ClrType)
             .ToArray();

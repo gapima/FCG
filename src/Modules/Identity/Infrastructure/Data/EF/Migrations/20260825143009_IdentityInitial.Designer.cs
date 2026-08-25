@@ -3,20 +3,24 @@ using System;
 using FIAP.CloudGames.Infrastructure.Data.EF.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
+namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations.Identity
 {
-    [DbContext(typeof(PostgresqlDbContext))]
-    partial class PostgresqlDbContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(IdentityDbContext))]
+    [Migration("20260825143009_IdentityInitial")]
+    partial class IdentityInitial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("identity")
                 .HasAnnotation("ProductVersion", "8.0.29")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -40,12 +44,10 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JogoId");
-
                     b.HasIndex("UsuarioId", "JogoId")
                         .IsUnique();
 
-                    b.ToTable("tb_Autorizacao", (string)null);
+                    b.ToTable("tb_Autorizacao", "identity");
                 });
 
             modelBuilder.Entity("FIAP.CloudGames.Domain.AccessControl.Entities.Permissao", b =>
@@ -74,168 +76,7 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
 
                     b.HasIndex("PerfilId");
 
-                    b.ToTable("permissoes", (string)null);
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Catalog.Entities.Categoria", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("tb_Categorias", (string)null);
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Catalog.Entities.CategoriaJogo", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CategoriaId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("JogoId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoriaId");
-
-                    b.HasIndex("JogoId", "CategoriaId")
-                        .IsUnique();
-
-                    b.ToTable("rel_CategoriaJogo", (string)null);
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Catalog.Entities.Jogo", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<bool>("Ativo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("ativo");
-
-                    b.Property<DateTimeOffset>("DataCadastro")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("data_cadastro");
-
-                    b.Property<string>("Descricao")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("descricao");
-
-                    b.Property<string>("FaixaEtaria")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)")
-                        .HasColumnName("faixa_etaria");
-
-                    b.Property<decimal>("Preco")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)")
-                        .HasColumnName("preco");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)")
-                        .HasColumnName("titulo");
-
-                    b.HasKey("Id")
-                        .HasName("pk_jogos");
-
-                    b.ToTable("jogos", (string)null);
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.Aquisicao", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("UsuarioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("usuario_id");
-
-                    b.Property<Guid>("JogoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("jogo_id");
-
-                    b.Property<DateTimeOffset>("DataAquisicao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("data_aquisicao");
-
-                    b.HasKey("Id", "UsuarioId", "JogoId")
-                        .HasName("pk_aquisicoes");
-
-                    b.HasIndex("JogoId");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("aquisicoes", (string)null);
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.LogJogo", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("Id");
-
-                    b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("DataCriacao");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("Descricao");
-
-                    b.Property<Guid>("JogoId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("JogoId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JogoId");
-
-                    b.ToTable("tb_LogJogos", (string)null);
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.LogUsuario", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("Id");
-
-                    b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("DataCriacao");
-
-                    b.Property<string>("Descricao")
-                        .IsRequired()
-                        .HasColumnType("varchar(200)")
-                        .HasColumnName("Descricao");
-
-                    b.Property<Guid>("UsuarioId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("UsuarioId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("tb_LogUsuarios", (string)null);
+                    b.ToTable("permissoes", "identity");
                 });
 
             modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.Token", b =>
@@ -269,7 +110,7 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
 
                     b.HasIndex("UsuarioId");
 
-                    b.ToTable("tb_Tokens", (string)null);
+                    b.ToTable("tb_Tokens", "identity");
                 });
 
             modelBuilder.Entity("FIAP.CloudGames.Domain.Identity.Entities.Perfil", b =>
@@ -289,7 +130,7 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
                     b.HasIndex("Nome")
                         .IsUnique();
 
-                    b.ToTable("tb_Perfil", (string)null);
+                    b.ToTable("tb_Perfil", "identity");
 
                     b.HasData(
                         new
@@ -366,7 +207,7 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
                     b.HasIndex("PerfilId")
                         .HasDatabaseName("ix_usuarios_perfil_id");
 
-                    b.ToTable("usuarios", null, t =>
+                    b.ToTable("usuarios", "identity", t =>
                         {
                             t.HasCheckConstraint("ck_usuarios_perfil_id_nao_vazio", "\"perfil_id\" <> '00000000-0000-0000-0000-000000000000'::uuid");
                         });
@@ -374,12 +215,6 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
 
             modelBuilder.Entity("FIAP.CloudGames.Domain.AccessControl.Entities.Autorizacao", b =>
                 {
-                    b.HasOne("FIAP.CloudGames.Domain.Catalog.Entities.Jogo", null)
-                        .WithMany()
-                        .HasForeignKey("JogoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("FIAP.CloudGames.Domain.Identity.Entities.Usuario", null)
                         .WithMany()
                         .HasForeignKey("UsuarioId")
@@ -392,56 +227,6 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Migrations
                     b.HasOne("FIAP.CloudGames.Domain.Identity.Entities.Perfil", null)
                         .WithMany()
                         .HasForeignKey("PerfilId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Catalog.Entities.CategoriaJogo", b =>
-                {
-                    b.HasOne("FIAP.CloudGames.Domain.Catalog.Entities.Categoria", null)
-                        .WithMany()
-                        .HasForeignKey("CategoriaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FIAP.CloudGames.Domain.Catalog.Entities.Jogo", null)
-                        .WithMany()
-                        .HasForeignKey("JogoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.Aquisicao", b =>
-                {
-                    b.HasOne("FIAP.CloudGames.Domain.Catalog.Entities.Jogo", null)
-                        .WithMany()
-                        .HasForeignKey("JogoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_aquisicoes_jogos");
-
-                    b.HasOne("FIAP.CloudGames.Domain.Identity.Entities.Usuario", null)
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_aquisicoes_usuarios");
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.LogJogo", b =>
-                {
-                    b.HasOne("FIAP.CloudGames.Domain.Catalog.Entities.Jogo", null)
-                        .WithMany()
-                        .HasForeignKey("JogoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("FIAP.CloudGames.Domain.Entities.LogUsuario", b =>
-                {
-                    b.HasOne("FIAP.CloudGames.Domain.Identity.Entities.Usuario", null)
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

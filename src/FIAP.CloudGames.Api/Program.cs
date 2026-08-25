@@ -1,5 +1,4 @@
 using FIAP.CloudGames.Api.Configuration;
-using FIAP.CloudGames.Infrastructure.IoC;
 using FIAP.CloudGames.Modules.Acquisition;
 using FIAP.CloudGames.Modules.Catalog;
 using FIAP.CloudGames.Modules.Identity;
@@ -14,8 +13,7 @@ builder.Services.AddHealthChecks();
 builder.Services.AdicionarDocumentacaoSwagger();
 builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 
-// Persistência compartilhada e módulos funcionais.
-builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
+// Módulos funcionais e suas persistências.
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddCatalogModule(builder.Configuration);
 builder.Services.AddAcquisitionModule(builder.Configuration);

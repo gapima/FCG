@@ -26,7 +26,7 @@ RUN dotnet build "src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.cspro
 
 FROM build AS migrations
 
-ENTRYPOINT ["dotnet", "ef", "database", "update", "--project", "src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj", "--startup-project", "src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj", "--context", "PostgresqlDbContext", "--configuration", "Release", "--no-build"]
+ENTRYPOINT ["sh", "-c", "dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext --configuration Release --no-build && dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext --configuration Release --no-build"]
 
 FROM build AS publish
 

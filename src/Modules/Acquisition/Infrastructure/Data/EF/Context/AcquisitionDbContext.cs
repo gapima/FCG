@@ -6,6 +6,8 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Context;
 
 public sealed class AcquisitionDbContext : DbContext
 {
+    public const string Schema = "acquisition";
+
     public AcquisitionDbContext(DbContextOptions<AcquisitionDbContext> opcoes)
         : base(opcoes)
     {
@@ -15,6 +17,7 @@ public sealed class AcquisitionDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new MapeamentoAquisicao());
     }
 }

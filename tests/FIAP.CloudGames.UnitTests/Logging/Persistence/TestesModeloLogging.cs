@@ -14,6 +14,8 @@ public sealed class TestesModeloLogging
     {
         using var contexto = CriarContexto();
 
+        Assert.Equal(LoggingDbContext.Schema, contexto.Model.GetDefaultSchema());
+
         var tiposEsperados = new[]
         {
             typeof(LogJogo),

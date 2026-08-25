@@ -14,6 +14,8 @@ public sealed class TestesModeloIdentity
     {
         using var contexto = CriarContexto();
 
+        Assert.Equal(IdentityDbContext.Schema, contexto.Model.GetDefaultSchema());
+
         var tiposEsperados = new[]
         {
             typeof(Autorizacao),

@@ -14,6 +14,8 @@ public sealed class TestesModeloCatalog
     {
         using var contexto = CriarContexto();
 
+        Assert.Equal(CatalogDbContext.Schema, contexto.Model.GetDefaultSchema());
+
         var tiposEsperados = new[]
         {
             typeof(Categoria),

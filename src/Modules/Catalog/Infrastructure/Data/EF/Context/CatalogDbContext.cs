@@ -6,6 +6,8 @@ namespace FIAP.CloudGames.Infrastructure.Data.EF.Context;
 
 public sealed class CatalogDbContext : DbContext
 {
+    public const string Schema = "catalog";
+
     public CatalogDbContext(DbContextOptions<CatalogDbContext> opcoes)
         : base(opcoes)
     {
@@ -17,6 +19,7 @@ public sealed class CatalogDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema(Schema);
         modelBuilder.ApplyConfiguration(new MapeamentoJogo());
         modelBuilder.ApplyConfiguration(new MapeamentoCategoria());
         modelBuilder.ApplyConfiguration(new MapeamentoCategoriaJogo());

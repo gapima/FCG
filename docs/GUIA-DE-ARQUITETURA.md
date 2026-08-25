@@ -42,11 +42,11 @@ Representa o negócio. Contém entidades, propriedades e regras que devem valer 
 
 Implementa os detalhes técnicos definidos por interfaces da Application.
 
-- Contém `DbContext`, mapeamentos e repositórios do Entity Framework.
+- Compila os contextos, mappings e repositories localizados fisicamente nos módulos.
 - Configura Npgsql e PostgreSQL.
-- Implementa `IRepositoryUsuarios` com `Repositories/Identity/RepositorioUsuarios`.
+- Mantém apenas configuração técnica compartilhada indispensável.
 
-Seus registros ficam em `IoC/InfrastructureDependency.cs`.
+Cada módulo registra sua própria Infrastructure em `Modules/*/Infrastructure/IoC`.
 
 ## Organização por módulo
 
@@ -60,7 +60,7 @@ Infrastructure/.../Identity/...
 tests/.../Identity/...
 ```
 
-Use o mesmo padrão para `Catalog`, `Library`, `AccessControl` e `Audit` quando surgirem casos de uso dessas áreas. Pastas são a fronteira inicial; evite que um módulo modifique diretamente o estado interno de outro. O banco e o `PostgresqlDbContext` podem continuar compartilhados durante a Fase 1.
+Identity, Catalog, Acquisition e Logging possuem ownership físico próprio. Os módulos compartilham a instância PostgreSQL, mas usam `DbContext`, schema e histórico de migrations independentes. IDs externos substituem FKs físicas entre módulos.
 
 ## Fluxo do endpoint de exemplo
 
@@ -70,7 +70,7 @@ POST /api/v1/usuarios
   -> ManipuladorCriarUsuario
   -> IRepositoryUsuarios
   -> RepositorioUsuarios
-  -> PostgresqlDbContext
+  -> IdentityDbContext
   -> PostgreSQL
 ```
 
@@ -81,14 +81,16 @@ Cada parte possui uma responsabilidade. O controller trata HTTP, o manipulador e
 O `Program.cs` registra os recursos da API e chama as extensões das outras camadas:
 
 ```csharp
-builder.Services.RegistrarApplicationDependency();
-builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
+builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCatalogModule(builder.Configuration);
+builder.Services.AddAcquisitionModule(builder.Configuration);
+builder.Services.AddLoggingModule(builder.Configuration);
 ```
 
 Para registrar uma nova dependência:
 
 - serviço ou caso de uso da Application: use `ApplicationDependency`;
-- repositório, banco ou integração externa: use `InfrastructureDependency`;
+- repositório, contexto ou integração do módulo: use o entry point `Add*Module` correspondente;
 - recurso exclusivo da API: registre no `Program.cs` ou em uma extensão da pasta `Configuration`.
 
 Prefira receber interfaces no construtor. Um caso de uso deve depender de `IRepositoryUsuarios`, não de `RepositorioUsuarios`.
@@ -114,16 +116,18 @@ Não retorne entidades do domínio diretamente pela API. Use contratos de respos
 
 ## Banco e migrations
 
-O projeto usa PostgreSQL, Entity Framework Core e `PostgresqlDbContext`. A connection string é lida de `ConnectionStrings:PostgreSql`.
+O projeto usa um PostgreSQL e quatro contextos EF Core. A connection string compartilhada é lida de `ConnectionStrings:PostgreSql`.
 
-As migrations existentes ficam em `Infrastructure/Data/EF/Migrations`:
+Cada módulo possui migration e snapshot próprios:
 
-- `InitialCreate`;
-- `AdicionarDemaisEntidades`;
-- `CorrigirPerfilIdUsuario`;
-- `ImplementarLoginJwtRefreshToken`.
+- `IdentityDbContext` → schema `identity`;
+- `CatalogDbContext` → schema `catalog`;
+- `AcquisitionDbContext` → schema `acquisition`;
+- `LoggingDbContext` → schema `logging`.
 
-A aplicação não executa migrations dentro do processo HTTP. No ambiente Docker, o serviço isolado `migrations` executa `dotnet ef database update` e a API só inicia depois de seu sucesso. Não recrie ou edite migrations do grupo sem confirmar o impacto e verificar se já foram usadas em algum banco compartilhado.
+Cada schema mantém sua própria tabela `__EFMigrationsHistory`. Não existem FKs físicas cross-module.
+
+A aplicação não executa migrations dentro do processo HTTP. No ambiente Docker, o serviço isolado `migrations` aplica Identity, Catalog, Acquisition e Logging, nessa ordem, e a API só inicia depois do sucesso dos quatro contextos.
 
 ## Antes de entregar
 
