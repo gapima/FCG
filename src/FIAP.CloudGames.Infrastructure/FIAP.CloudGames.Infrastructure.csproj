@@ -12,8 +12,4 @@
     <ProjectReference Include="..\FIAP.CloudGames.Application\FIAP.CloudGames.Application.csproj" />
     <ProjectReference Include="..\FIAP.CloudGames.Domain\FIAP.CloudGames.Domain.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Modules\Logging\Infrastructure\**\*.cs" Link="Logging\%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
 </Project>

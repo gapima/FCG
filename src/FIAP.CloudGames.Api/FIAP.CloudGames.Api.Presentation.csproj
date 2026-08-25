@@ -16,6 +16,7 @@
     <ProjectReference Include="..\Modules\Identity\FIAP.CloudGames.Modules.Identity.csproj" />
     <ProjectReference Include="..\Modules\Catalog\FIAP.CloudGames.Modules.Catalog.csproj" />
     <ProjectReference Include="..\Modules\Acquisition\FIAP.CloudGames.Modules.Acquisition.csproj" />
+    <ProjectReference Include="..\Modules\Logging\FIAP.CloudGames.Modules.Logging.csproj" />
     <ProjectReference Include="..\FIAP.CloudGames.Application\FIAP.CloudGames.Application.csproj" />
     <ProjectReference Include="..\FIAP.CloudGames.Infrastructure\FIAP.CloudGames.Infrastructure.csproj" />
   </ItemGroup>
