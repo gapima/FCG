@@ -25,10 +25,10 @@ Executar migrations:
 
 ```bash
 dotnet tool restore
-dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext
-dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext
-dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext
-dotnet ef database update --project src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext
+dotnet ef database update --project src/Modules/Identity/FIAP.CloudGames.Modules.Identity.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext
+dotnet ef database update --project src/Modules/Catalog/FIAP.CloudGames.Modules.Catalog.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext
+dotnet ef database update --project src/Modules/Acquisition/FIAP.CloudGames.Modules.Acquisition.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext
+dotnet ef database update --project src/Modules/Logging/FIAP.CloudGames.Modules.Logging.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext
 ```
 
 Os quatro módulos usam o mesmo PostgreSQL, com schemas e históricos de migrations independentes: `identity`, `catalog`, `acquisition` e `logging`. Não existem FKs físicas entre módulos.
@@ -58,4 +58,3 @@ O target `migrations` da imagem aplica os quatro contextos explicitamente e inte
 ```bash
 docker compose run --rm migrations
 ```
-

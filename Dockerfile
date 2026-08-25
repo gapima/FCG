@@ -13,9 +13,6 @@ COPY ["src/Modules/Catalog/FIAP.CloudGames.Modules.Catalog.csproj", "src/Modules
 COPY ["src/Modules/Acquisition/FIAP.CloudGames.Modules.Acquisition.csproj", "src/Modules/Acquisition/"]
 COPY ["src/Modules/Logging/FIAP.CloudGames.Modules.Logging.csproj", "src/Modules/Logging/"]
 COPY ["src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj", "src/FIAP.CloudGames.Api/"]
-COPY ["src/FIAP.CloudGames.Application/FIAP.CloudGames.Application.csproj", "src/FIAP.CloudGames.Application/"]
-COPY ["src/FIAP.CloudGames.Domain/FIAP.CloudGames.Domain.csproj", "src/FIAP.CloudGames.Domain/"]
-COPY ["src/FIAP.CloudGames.Infrastructure/FIAP.CloudGames.Infrastructure.csproj", "src/FIAP.CloudGames.Infrastructure/"]
 
 RUN dotnet tool restore \
     && dotnet restore "src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj"
