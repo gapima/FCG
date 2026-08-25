@@ -9,7 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Serviços próprios da API e do pipeline HTTP.
 builder.Services
     .AddControllers()
-    .AddApplicationPart(typeof(IdentityModuleDependency).Assembly);
+    .AddApplicationPart(typeof(IdentityModuleDependency).Assembly)
+    .AddApplicationPart(typeof(CatalogModuleDependency).Assembly);
 builder.Services.AddProblemDetailsApi();
 builder.Services.AddHealthChecks();
 builder.Services.AdicionarDocumentacaoSwagger();

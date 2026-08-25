@@ -14,11 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Modules\Identity\FIAP.CloudGames.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Catalog\FIAP.CloudGames.Modules.Catalog.csproj" />
     <ProjectReference Include="..\FIAP.CloudGames.Application\FIAP.CloudGames.Application.csproj" />
     <ProjectReference Include="..\FIAP.CloudGames.Infrastructure\FIAP.CloudGames.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Modules\Catalog\Api\**\*.cs" Link="Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

@@ -6,8 +6,4 @@
   <ItemGroup>
     <ProjectReference Include="..\FIAP.CloudGames.Domain\FIAP.CloudGames.Domain.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Modules\Catalog\Application\**\*.cs" Link="Catalog\%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
 </Project>
