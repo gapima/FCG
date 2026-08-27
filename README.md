@@ -24,10 +24,14 @@ Opção A — Local (.NET)
 Executar migrations:
 
 ```bash
-cd src/FIAP.CloudGames.Api
 dotnet tool restore
-dotnet ef database update
+dotnet ef database update --project src/Modules/Identity/FIAP.CloudGames.Modules.Identity.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext
+dotnet ef database update --project src/Modules/Catalog/FIAP.CloudGames.Modules.Catalog.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext
+dotnet ef database update --project src/Modules/Acquisition/FIAP.CloudGames.Modules.Acquisition.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext
+dotnet ef database update --project src/Modules/Logging/FIAP.CloudGames.Modules.Logging.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext
 ```
+
+Os quatro módulos usam o mesmo PostgreSQL, com schemas e históricos de migrations independentes: `identity`, `catalog`, `acquisition` e `logging`. Não existem FKs físicas entre módulos.
 
 Iniciar o servidor:
 
@@ -49,17 +53,8 @@ Executar o container (exemplo mapeando a porta 80 do container para a porta 5000
 docker run -e ASPNETCORE_ENVIRONMENT=Development -p 5000:80 --name fiap-cloudgames fiap-cloudgames
 ```
 
-Para executar as migrations do EF a partir de um container (execução pontual), passe a connection string e execute `dotnet ef database update` dentro da imagem. Exemplo (ajuste caminhos e connection string conforme necessário):
+O target `migrations` da imagem aplica os quatro contextos explicitamente e interrompe na primeira falha. Com as variáveis do arquivo `.env` configuradas, execute:
 
 ```bash
-docker run --rm \
-  -e ConnectionStrings__DefaultConnection="Host=host.docker.internal;Port=5432;Username=postgres;Password=secret;Database=fiap" \
-  --entrypoint dotnet fiap-cloudgames \
-  /app/src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj ef database update --project /app/src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj
+docker compose run --rm migrations
 ```
-
-Observações:
-- Substitua os valores da connection string pelos dados do seu PostgreSQL (host, porta, usuário, senha, database).
-- Ao usar Docker no Windows, `host.docker.internal` aponta para a máquina host.
-
-

@@ -45,11 +45,11 @@ public sealed class TestesRelacionamentoUsuarioPerfil
     [Fact]
     public void Modelo_ConfiguraRelacionamentoRestritivoEntreUsuarioEPerfil()
     {
-        var opcoes = new DbContextOptionsBuilder<PostgresqlDbContext>()
+        var opcoes = new DbContextOptionsBuilder<IdentityDbContext>()
             .UseNpgsql(
                 "Host=localhost;Database=fiap_cloud_games_tests;Username=postgres;Password=tests")
             .Options;
-        using var contexto = new PostgresqlDbContext(opcoes);
+        using var contexto = new IdentityDbContext(opcoes);
 
         var entidadeUsuario = contexto.Model.FindEntityType(typeof(Usuario));
         Assert.NotNull(entidadeUsuario);
