@@ -1,6 +1,6 @@
 # Manual da API — FIAP Cloud Games
 
-## Visão geral
+## Visão geral 
 
 API REST para gerenciamento de usuários e do catálogo de jogos. As rotas são
 versionadas em `/api/v1`, aceitam e retornam JSON e usam PostgreSQL. A
