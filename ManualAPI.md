@@ -2,9 +2,10 @@
 
 ## Visão geral 
 
-API REST para gerenciamento de usuários e do catálogo de jogos. As rotas são
-versionadas em `/api/v1`, aceitam e retornam JSON e usam PostgreSQL. A
-autenticação é feita com JWT e refresh tokens rotativos.
+API REST para gerenciamento de usuários e do catálogo de jogos. Os endpoints
+de negócio são versionados em `/api/v1` (`/health` e o Swagger ficam fora
+desse prefixo). A API aceita e retorna JSON e usa PostgreSQL. A autenticação é
+feita com JWT e refresh tokens rotativos.
 
 | Serviço | Endereço local |
 | --- | --- |
@@ -17,7 +18,7 @@ são números JSON, sem símbolo de moeda.
 
 ## Executar localmente
 
-Pré-requisitos: .NET SDK 10, PostgreSQL e uma chave JWT de pelo menos 32 bytes.
+Pré-requisitos: .NET SDK 8, PostgreSQL e uma chave JWT de pelo menos 32 bytes.
 Configure a connection string `ConnectionStrings__PostgreSql` e
 `Jwt__SigningKey`:
 
@@ -27,11 +28,18 @@ export Jwt__SigningKey='uma-chave-secreta-com-pelo-menos-32-bytes'
 export Swagger__Enabled=true
 ```
 
-Execute as migrations e a API:
+Execute as migrations de cada módulo e a API. Após a modularização, as
+migrations ficam separadas por `DbContext` (`Identity`, `Catalog`,
+`Acquisition` e `Logging`) e o projeto de startup passou a ser
+`FIAP.CloudGames.Api.Presentation`:
 
 ```bash
-dotnet ef database update --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api
-dotnet run --project src/FIAP.CloudGames.Api --urls http://localhost:5080
+dotnet ef database update --context IdentityDbContext --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api.Presentation
+dotnet ef database update --context CatalogDbContext --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api.Presentation
+dotnet ef database update --context AcquisitionDbContext --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api.Presentation
+dotnet ef database update --context LoggingDbContext --project src/FIAP.CloudGames.Infrastructure --startup-project src/FIAP.CloudGames.Api.Presentation
+
+dotnet run --project src/FIAP.CloudGames.Api.Presentation --urls http://localhost:5080
 ```
 
 Para Docker, copie `.env.example` para `.env`, preencha `JWT_SIGNING_KEY` e
@@ -77,8 +85,8 @@ Authorization: Bearer <accessToken>
 
 O access token expira em 480 minutos e o refresh token em 7 dias, conforme a
 configuração padrão. Ao renovar, o refresh token anterior é invalidado. Logout
-revoga todos os refresh tokens do usuário; o access token continua válido até
-expirar.
+revoga todos os refresh tokens ativos do usuário; o access token continua
+válido até expirar.
 
 > As migrations criam os perfis, mas não uma conta administradora. O primeiro
 > administrador precisa ser provisionado por procedimento seguro externo; depois
@@ -135,7 +143,7 @@ e `401` se estiver inválido, expirado, revogado ou já utilizado.
 
 ### `POST /api/v1/auth/logout`
 
-**Acesso:** autenticado. Revoga os refresh tokens ativos do usuário.
+**Acesso:** autenticado. Revoga todos os refresh tokens ativos do usuário.
 
 **Resposta:** `204 No Content`.
 
@@ -178,7 +186,9 @@ Retorna `409` para e-mail ou CPF já utilizado.
 
 Obtém um usuário. **Acesso:** o próprio titular ou `Administrador`.
 
-**Resposta `200`:** mesmo contrato do cadastro. Retorna `404` se não existir.
+**Resposta `200`:** mesmo contrato do cadastro. Retorna `400` se o `id` for
+inválido, `401` se não houver autenticação, `403` se o solicitante não for o
+próprio titular nem `Administrador` e `404` se o usuário não existir.
 
 ### `PUT /api/v1/usuarios/{id}`
 
@@ -227,7 +237,7 @@ Cria um jogo.
 {
   "titulo": "Jogo de exemplo",
   "descricao": "Uma aventura cooperativa.",
-  "faixaEtaria": "Livre",
+  "faixaEtaria": "L",
   "preco": 59.9
 }
 ```
@@ -239,7 +249,7 @@ Cria um jogo.
   "id": "00000000-0000-0000-0000-000000000000",
   "titulo": "Jogo de exemplo",
   "descricao": "Uma aventura cooperativa.",
-  "faixaEtaria": "Livre",
+  "faixaEtaria": "L",
   "preco": 59.9,
   "ativo": true,
   "dataCadastro": "2026-08-26T12:00:00+00:00"
@@ -251,8 +261,8 @@ negativo; descrição e faixa etária são opcionais.
 
 ### `GET /api/v1/jogos/{id}`
 
-Obtém um jogo. Retorna `200` com o mesmo contrato da criação ou `404` se não
-existir.
+Obtém um jogo. Retorna `200` com o mesmo contrato da criação, `400` se o `id`
+for `Guid.Empty` ou `404` se não existir.
 
 ### `GET /api/v1/jogos?pagina=1&tamanhoPagina=20`
 
@@ -267,7 +277,7 @@ Lista jogos paginados. `pagina` padrão é `1` e deve ser maior que zero;
     "id": "00000000-0000-0000-0000-000000000000",
     "titulo": "Jogo de exemplo",
     "descricao": "Uma aventura cooperativa.",
-    "faixaEtaria": "Livre",
+    "faixaEtaria": "L",
     "preco": 59.9,
     "ativo": true,
     "dataCadastro": "2026-08-26T12:00:00+00:00"
@@ -285,7 +295,7 @@ Atualiza título, descrição, faixa etária e preço.
 {
   "titulo": "Jogo de exemplo — edição atualizada",
   "descricao": "Descrição atualizada.",
-  "faixaEtaria": "12 anos",
+  "faixaEtaria": "12",
   "preco": 69.9
 }
 ```
