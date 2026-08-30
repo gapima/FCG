@@ -11,11 +11,11 @@ public sealed class TestesMapeamentoUsuario
     [Fact]
     public void Modelo_ConfiguraUsuarioParaPostgreSqlComEmailUnico()
     {
-        var opcoes = new DbContextOptionsBuilder<PostgresqlDbContext>()
+        var opcoes = new DbContextOptionsBuilder<IdentityDbContext>()
             .UseNpgsql(
                 "Host=localhost;Database=fiap_cloud_games_tests;Username=postgres;Password=tests")
             .Options;
-        using var contexto = new PostgresqlDbContext(opcoes);
+        using var contexto = new IdentityDbContext(opcoes);
 
         var entidade = contexto.Model.FindEntityType(typeof(Usuario));
         Assert.NotNull(entidade);

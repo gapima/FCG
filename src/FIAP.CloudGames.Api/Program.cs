@@ -1,19 +1,26 @@
 using FIAP.CloudGames.Api.Configuration;
-using FIAP.CloudGames.Application.IoC;
-using FIAP.CloudGames.Infrastructure.IoC;
+using FIAP.CloudGames.Modules.Acquisition;
+using FIAP.CloudGames.Modules.Catalog;
+using FIAP.CloudGames.Modules.Identity;
+using FIAP.CloudGames.Modules.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Serviços próprios da API e do pipeline HTTP.
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddApplicationPart(typeof(IdentityModuleDependency).Assembly)
+    .AddApplicationPart(typeof(CatalogModuleDependency).Assembly);
 builder.Services.AddProblemDetailsApi();
 builder.Services.AddHealthChecks();
 builder.Services.AdicionarDocumentacaoSwagger();
 builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 
-// Serviços organizados pelas respectivas camadas.
-builder.Services.RegistrarApplicationDependency();
-builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
+// Módulos funcionais e suas persistências.
+builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCatalogModule(builder.Configuration);
+builder.Services.AddAcquisitionModule(builder.Configuration);
+builder.Services.AddLoggingModule(builder.Configuration);
 
 var app = builder.Build();
 

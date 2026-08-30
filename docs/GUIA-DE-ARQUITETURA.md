@@ -1,172 +1,185 @@
 # Guia rápido de arquitetura e desenvolvimento
 
-Este documento é uma consulta rápida para quem vai desenvolver na FIAP Cloud Games. A solução é uma API .NET 8 organizada em camadas, com pastas verticais por negócio, e executada como um único monólito.
+O FIAP Cloud Games é uma API .NET 8 organizada como monólito modular. Existe um único processo de aplicação, enquanto Identity, Catalog, Acquisition e Logging são compilados em assemblies próprios.
 
-## Visão das camadas
-
-```text
-API --------------> Application -------------> Domain
- |                       ^                        ^
- `--> Infrastructure ---'------------------------'
-```
-
-### `FIAP.CloudGames.Api`
-
-É a entrada da aplicação. Contém controllers, contratos HTTP, Swagger, tratamento de erros e o `Program.cs`. O endpoint atual de usuário está em `Identity`.
-
-- Recebe e responde HTTP.
-- Converte requests em comandos da Application.
-- Converte resultados dos casos de uso em códigos como `201`, `400` e `409`.
-- Não deve conter regra de negócio nem acesso direto ao banco.
-
-### `FIAP.CloudGames.Application`
-
-Orquestra os casos de uso. O exemplo atual é `Identity/Usuarios/ManipuladorCriarUsuario`.
-
-- Contém comandos, resultados e manipuladores.
-- Declara interfaces necessárias, como `IRepositoryUsuarios`.
-- Valida e coordena o fluxo da funcionalidade.
-- Não conhece controllers, Entity Framework ou PostgreSQL.
-
-Seus registros ficam em `IoC/ApplicationDependency.cs`.
-
-### `FIAP.CloudGames.Domain`
-
-Representa o negócio. Contém entidades, propriedades e regras que devem valer independentemente da API ou do banco. As áreas atuais incluem `Identity`, `Catalog` e `AccessControl`; biblioteca e auditoria ainda precisam de organização vertical consistente.
-
-- Não referencia as outras camadas.
-- Não utiliza atributos do Entity Framework.
-- Deve permanecer simples e independente de tecnologia.
-
-### `FIAP.CloudGames.Infrastructure`
-
-Implementa os detalhes técnicos definidos por interfaces da Application.
-
-- Contém `DbContext`, mapeamentos e repositórios do Entity Framework.
-- Configura Npgsql e PostgreSQL.
-- Implementa `IRepositoryUsuarios` com `Repositories/Identity/RepositorioUsuarios`.
-
-Seus registros ficam em `IoC/InfrastructureDependency.cs`.
-
-## Organização por módulo
-
-As camadas continuam sendo projetos separados, e cada área de negócio deve repetir a mesma organização vertical dentro delas:
+## Grafo de projetos
 
 ```text
-Api/Identity/...
-Application/Identity/...
-Domain/Identity/...
-Infrastructure/.../Identity/...
-tests/.../Identity/...
+FIAP.CloudGames.Api.Presentation
+├── FIAP.CloudGames.Modules.Identity
+├── FIAP.CloudGames.Modules.Catalog
+├── FIAP.CloudGames.Modules.Acquisition
+└── FIAP.CloudGames.Modules.Logging
 ```
 
-Use o mesmo padrão para `Catalog`, `Library`, `AccessControl` e `Audit` quando surgirem casos de uso dessas áreas. Pastas são a fronteira inicial; evite que um módulo modifique diretamente o estado interno de outro. O banco e o `PostgresqlDbContext` podem continuar compartilhados durante a Fase 1.
+A API é o host e composition root. Os módulos não possuem `ProjectReference` entre si.
 
-## Fluxo do endpoint de exemplo
+## Responsabilidades do host
+
+`src/FIAP.CloudGames.Api` contém somente recursos do host, como:
+
+- `Program.cs`;
+- configuração de autenticação;
+- configuração de Swagger;
+- tratamento de erros e health checks;
+- appsettings e bootstrap dos módulos.
+
+O host registra os módulos por seus entry points:
+
+```csharp
+builder.Services.AddIdentityModule(builder.Configuration);
+builder.Services.AddCatalogModule(builder.Configuration);
+builder.Services.AddAcquisitionModule(builder.Configuration);
+builder.Services.AddLoggingModule(builder.Configuration);
+```
+
+Identity e Catalog possuem controllers nos próprios assemblies. Por isso, o MVC carrega explicitamente seus Application Parts. Acquisition e Logging não possuem controllers.
+
+## Organização interna dos módulos
+
+Um módulo pode conter as seguintes responsabilidades, somente quando necessárias:
+
+```text
+Module/
+├── Domain/
+├── Application/       quando existir
+├── Infrastructure/
+├── Api/               quando existir
+└── Module.csproj
+```
+
+Estado atual:
+
+| Módulo | Domain | Application | Infrastructure | Api |
+|---|---:|---:|---:|---:|
+| Identity | Sim | Sim | Sim | Sim |
+| Catalog | Sim | Sim | Sim | Sim |
+| Acquisition | Sim | Não | Sim | Não |
+| Logging | Sim | Não | Sim | Não |
+
+Não crie camadas vazias apenas para uniformizar diretórios.
+
+## Ownership funcional
+
+### Identity
+
+Identity é responsável por usuários, perfis, tokens, permissões e autorizações. `Permissao` e `Autorizacao` pertencem a este módulo; AccessControl não é um módulo separado.
+
+Os controllers atuais cobrem autenticação e usuários. O fluxo de criação, por exemplo, permanece integralmente no assembly de Identity:
 
 ```text
 POST /api/v1/usuarios
-  -> UsuariosController
-  -> ManipuladorCriarUsuario
-  -> IRepositoryUsuarios
-  -> RepositorioUsuarios
-  -> PostgresqlDbContext
-  -> PostgreSQL
+  → UsuariosController
+  → ManipuladorCriarUsuario
+  → IRepositorioUsuarios
+  → RepositorioUsuarios
+  → IdentityDbContext
 ```
 
-Cada parte possui uma responsabilidade. O controller trata HTTP, o manipulador executa o caso de uso, o repositório trabalha com persistência e o domínio representa o usuário.
+### Catalog
 
-## Injeção de dependência
+Catalog é responsável por jogos, categorias e pelo vínculo `CategoriaJogo`. A superfície HTTP implementada atualmente contém somente operações de Jogos em `/api/v1/jogos`.
 
-O `Program.cs` registra os recursos da API e chama as extensões das outras camadas:
+Não há controller ou endpoints HTTP de Categoria nesta versão.
 
-```csharp
-builder.Services.RegistrarApplicationDependency();
-builder.Services.RegistrarInfrastructureDependency(builder.Configuration);
+### Acquisition
+
+Acquisition contém a entidade `Aquisicao` e sua persistência. Ainda não possui casos de uso, contratos HTTP ou controllers.
+
+### Logging
+
+Logging contém `LogUsuario`, `LogJogo` e sua persistência. Ainda não possui casos de uso, API ou mensageria.
+
+## Regras de dependência
+
+- Um módulo não referencia o projeto de outro módulo.
+- Um módulo não acessa o DbContext ou a Infrastructure de outro módulo.
+- A API conhece somente os entry points públicos necessários para composição.
+- Referências cross-module são IDs escalares.
+- Não existem FKs físicas cross-module.
+- A criação de uma abstração compartilhada deve responder a uma necessidade funcional real.
+
+## Persistência
+
+O sistema utiliza uma connection string chamada `ConnectionStrings:PostgreSql`. Cada módulo registra seu próprio contexto:
+
+| Módulo | DbContext | Schema | Histórico |
+|---|---|---|---|
+| Identity | `IdentityDbContext` | `identity` | `identity.__EFMigrationsHistory` |
+| Catalog | `CatalogDbContext` | `catalog` | `catalog.__EFMigrationsHistory` |
+| Acquisition | `AcquisitionDbContext` | `acquisition` | `acquisition.__EFMigrationsHistory` |
+| Logging | `LoggingDbContext` | `logging` | `logging.__EFMigrationsHistory` |
+
+Cada módulo contém seus mappings, migrations e snapshot. Não existe DbContext global.
+
+Para aplicar as migrations localmente:
+
+```powershell
+dotnet tool restore
+dotnet ef database update --project src/Modules/Identity/FIAP.CloudGames.Modules.Identity.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context IdentityDbContext
+dotnet ef database update --project src/Modules/Catalog/FIAP.CloudGames.Modules.Catalog.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context CatalogDbContext
+dotnet ef database update --project src/Modules/Acquisition/FIAP.CloudGames.Modules.Acquisition.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context AcquisitionDbContext
+dotnet ef database update --project src/Modules/Logging/FIAP.CloudGames.Modules.Logging.csproj --startup-project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj --context LoggingDbContext
 ```
 
-Para registrar uma nova dependência:
+## Como implementar uma funcionalidade
 
-- serviço ou caso de uso da Application: use `ApplicationDependency`;
-- repositório, banco ou integração externa: use `InfrastructureDependency`;
-- recurso exclusivo da API: registre no `Program.cs` ou em uma extensão da pasta `Configuration`.
+Trabalhe dentro do módulo proprietário:
 
-Prefira receber interfaces no construtor. Um caso de uso deve depender de `IRepositoryUsuarios`, não de `RepositorioUsuarios`.
+1. ajuste as entidades e regras em Domain;
+2. se houver caso de uso, implemente comando, resultado, handler e abstrações em Application;
+3. implemente persistência ou integração em Infrastructure;
+4. registre a implementação no entry point `Add*Module`;
+5. se houver HTTP, crie contratos e controller em Api;
+6. adicione testes unitários e de integração adequados.
 
-Os principais ciclos de vida são:
+Não crie Application ou Api em módulos que ainda não necessitam dessas responsabilidades. Não exponha entidades diretamente como contratos HTTP.
 
-- `Scoped`: uma instância por requisição; indicado para `DbContext`, repositórios e casos de uso;
-- `Singleton`: uma instância durante toda a aplicação; use somente em serviços seguros para compartilhamento;
-- `Transient`: uma nova instância sempre que solicitada; útil para serviços leves e sem estado.
+## Configuração local
 
-## Como criar uma funcionalidade
+Use User Secrets ou variáveis de ambiente para dados sensíveis:
 
-Siga esta ordem:
+```powershell
+dotnet user-secrets set "ConnectionStrings:PostgreSql" "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=SUA_SENHA" --project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj
+$chaveJwtLocal = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
+dotnet user-secrets set "Jwt:SigningKey" $chaveJwtLocal --project src/FIAP.CloudGames.Api/FIAP.CloudGames.Api.Presentation.csproj
+```
 
-1. Crie ou ajuste entidades e regras no `Domain`.
-2. Crie comando, resultado, manipulador e interfaces na `Application`.
-3. Implemente persistência ou integrações na `Infrastructure`.
-4. Registre as dependências na classe `Dependency` da camada correta.
-5. Crie os contratos HTTP e o controller na `Api`.
-6. Adicione testes unitários e de integração.
+As variáveis equivalentes são `ConnectionStrings__PostgreSql` e `Jwt__SigningKey`.
 
-Não retorne entidades do domínio diretamente pela API. Use contratos de resposta próprios.
+## Docker
 
-## Banco e migrations
+O Compose inicia PostgreSQL, executa uma tarefa de migrations e publica uma única API:
 
-O projeto usa PostgreSQL, Entity Framework Core e `PostgresqlDbContext`. A connection string é lida de `ConnectionStrings:PostgreSql`.
+```text
+migrations ── aplica os quatro contextos ──┐
+                                           v
+PostgreSQL <──────────────────── FIAP.CloudGames.Api
+                                   ├── Identity.dll
+                                   ├── Catalog.dll
+                                   ├── Acquisition.dll
+                                   └── Logging.dll
+```
 
-As migrations existentes ficam em `Infrastructure/Data/EF/Migrations`:
+Os módulos não são microserviços. O container `migrations` é apenas uma etapa operacional anterior ao único processo da aplicação.
 
-- `InitialCreate`;
-- `AdicionarDemaisEntidades`;
-- `CorrigirPerfilIdUsuario`;
-- `ImplementarLoginJwtRefreshToken`.
+```powershell
+Copy-Item .env.example .env
+docker compose up -d --build
+```
 
-A aplicação não executa migrations dentro do processo HTTP. No ambiente Docker, o serviço isolado `migrations` executa `dotnet ef database update` e a API só inicia depois de seu sucesso. Não recrie ou edite migrations do grupo sem confirmar o impacto e verificar se já foram usadas em algum banco compartilhado.
+## Namespaces históricos
+
+Namespaces iniciados por `FIAP.CloudGames.Domain`, `FIAP.CloudGames.Application` ou `FIAP.CloudGames.Infrastructure` foram preservados para evitar uma refatoração sem benefício funcional imediato. Eles não indicam dependência dos antigos projetos agregadores, que já foram removidos.
+
+Ao desenvolver uma feature, não faça uma normalização geral desses namespaces como efeito colateral.
 
 ## Antes de entregar
 
 ```powershell
-dotnet restore FIAP.CloudGames.sln
-dotnet build FIAP.CloudGames.sln --no-restore --configuration Release
-dotnet test FIAP.CloudGames.sln --no-build --no-restore --configuration Release
-dotnet format FIAP.CloudGames.sln --no-restore --verify-no-changes
+dotnet build FIAP.CloudGames.sln -m:1
+dotnet test FIAP.CloudGames.sln -m:1
+git diff --check
 ```
 
-Confirme também que não foram adicionados segredos, arquivos locais ou mudanças fora da funcionalidade trabalhada.
-
-## Configuração local
-
-Use User Secrets em desenvolvimento:
-
-```powershell
-dotnet user-secrets set "ConnectionStrings:PostgreSql" "Host=localhost;Port=5432;Database=fiap_cloud_games;Username=postgres;Password=SUA_SENHA" --project src/FIAP.CloudGames.Api
-```
-
-```powershell
-$chaveJwtLocal = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
-dotnet user-secrets set "Jwt:SigningKey" $chaveJwtLocal --project src/FIAP.CloudGames.Api
-```
-
-Também podem ser usadas `ConnectionStrings__PostgreSql` e `Jwt__SigningKey`. Em ambientes compartilhados, use variável de ambiente ou cofre de segredos.
-
-## Infraestrutura local com Docker
-
-O `compose.yml` da raiz mantém a API e a infraestrutura no mesmo deploy local, sem transformar os módulos em serviços separados:
-
-```text
-API .NET 8 -> rede Docker -> PostgreSQL 16 -> volume persistente
-                 ^
-                 `-- serviço de migrations executado antes da API
-```
-
-Isso continua sendo um monólito: existe um único processo de aplicação e um único banco. O container `migrations` é apenas uma tarefa operacional de inicialização.
-
-```powershell
-docker compose up -d --build
-```
-
-Consulte [GUIA-DOCKER.md](GUIA-DOCKER.md) para configuração, Postman e inspeção de `usuarios` e `tb_Tokens`.
-
-O fluxo de autenticação está explicado em [GUIA-IMPLEMENTACAO-LOGIN-JWT-REFRESH-TOKEN.md](GUIA-IMPLEMENTACAO-LOGIN-JWT-REFRESH-TOKEN.md).
+Confirme também que não foram adicionados segredos, migrations não planejadas, referências entre módulos ou alterações fora da funcionalidade trabalhada.
